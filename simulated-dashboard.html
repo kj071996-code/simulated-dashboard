@@ -1,0 +1,2702 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light" />
+    <link rel="icon" href="data:," />
+    <title>Osborne Electric — Management Dashboard (Simulated)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f4f6f9;
+        --panel: #ffffff;
+        --panel-2: #e9ecef;
+        --panel-soft: #f8f9fa;
+        --line: #dee2e6;
+        --rule: #e9ecef;
+        --control: #adb5bd;
+        --ink: #212529;
+        --muted: #495057;
+        --faint: #6c757d;
+        --accent: #007bff;
+        --accent-soft: rgba(0, 123, 255, 0.10);
+        --negative: #dc3545;
+        --negative-ink: #dc3545;
+        --warning: #ffc107;
+        --radius: 4px;
+        --gap: 16px;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", system-ui, sans-serif;
+        font-size: 14px;
+        line-height: 1.55;
+        font-variant-numeric: tabular-nums;
+      }
+      .mono { font-variant-numeric: tabular-nums; }
+      .wrap { max-width: 1152px; margin: 0 auto; padding: 0 24px 64px; }
+
+      /* ---------- top bar ---------- */
+      .topbar {
+        height: 47px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      .wordmark { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+      .wordmark span { color: var(--muted); font-weight: 400; }
+      .topbar-right { color: var(--faint); font-size: 12px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+      .topbar-left { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .logo {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 26px; height: 26px;
+        background: var(--accent);
+        border-radius: 8px;
+        flex: none;
+      }
+      .logo svg { display: block; }
+      .topbar-actions { display: none; align-items: center; gap: 8px; flex: none; }
+      .icon-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px; height: 36px;
+        background: var(--panel);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        cursor: pointer;
+        padding: 0;
+      }
+      .icon-btn:hover, .icon-btn:focus-visible { border-color: var(--control); outline: none; }
+
+      /* ---------- header ---------- */
+      header.top { padding: 28px 0 0; }
+      .sim-badge {
+        display: inline-block;
+        background: var(--accent);
+        color: #000000;
+        font-weight: 600;
+        font-size: 12px;
+        padding: 5px 10px;
+        border-radius: 999px;
+      }
+      h1 {
+        font-size: 20px;
+        line-height: 1.25;
+        margin: 14px 0 6px;
+        font-weight: 500;
+        letter-spacing: -0.01em;
+      }
+      h1 .accent { color: var(--ink); }
+      .sub { color: var(--muted); max-width: 68ch; margin: 0; font-size: 14px; }
+      .sub strong { color: var(--ink); font-weight: 500; }
+
+      /* ---------- KPI strip ---------- */
+      .kpis {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-top: 22px;
+      }
+      .kpi {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 16px 10px;
+      }
+      .kpi .spark { margin-top: 8px; }
+      .kpi .spark svg { width: 100%; height: 34px; display: block; }
+      .kpi .value .unit { font-size: 13px; color: var(--muted); margin-left: 2px; }
+      .kpi .value.neg { color: var(--negative-ink); }
+      .kpi .label {
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+      }
+      .kpi .value {
+        font-size: 24px;
+        font-weight: 400;
+        line-height: 1.2;
+        margin: 6px 0 4px;
+        font-variant-numeric: tabular-nums;
+      }
+      .kpi .basis { font-size: 12px; color: var(--faint); line-height: 1.45; }
+
+      /* ---------- insights — the signature element ---------- */
+      .insights {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--gap);
+        margin-top: var(--gap);
+      }
+      .lane {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px;
+      }
+      .lane h2 {
+        margin: 0 0 4px;
+        font-size: 18px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .lane .mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px; height: 24px;
+        border-radius: 50%;
+        font-size: 13px;
+        font-weight: 600;
+        flex: none;
+      }
+      .lane.good .mark { background: #d4edda; color: var(--accent); }
+      .lane.odd .mark { background: #fff3cd; color: var(--warning); }
+      .lane p.lane-note { margin: 0 0 14px; color: var(--muted); font-size: 12px; line-height: 1.5; }
+      .insight {
+        display: block;
+        width: 100%;
+        min-height: 80px;
+        text-align: left;
+        background: var(--panel-soft);
+        color: var(--ink);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 14px 16px;
+        margin: 0 0 var(--gap);
+        cursor: pointer;
+        font: inherit;
+        font-size: 14px;
+        line-height: 1.5;
+      }
+      .insight:last-child { margin-bottom: 0; }
+      .insight:hover, .insight:focus-visible { border-color: var(--control); outline: none; background: #eef3f8; }
+      .insight .fig {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        margin-top: 6px;
+        font-variant-numeric: tabular-nums;
+      }
+      .lane.good .insight .fig { color: var(--accent); }
+      .lane.odd .insight .fig { color: var(--warning); }
+      .insight .go { display: block; color: var(--faint); font-size: 12px; margin-top: 2px; }
+
+      /* ---------- controls ---------- */
+      .controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: var(--gap) 22px;
+        align-items: end;
+        margin: 48px 0 0;
+        padding: 22px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+      .controls label {
+        display: block;
+        font-size: 12px;
+        color: var(--muted);
+        font-weight: 500;
+        margin-bottom: 7px;
+      }
+      .controls select {
+        background: var(--bg);
+        color: var(--ink);
+        border: 1px solid var(--control);
+        border-radius: 6px;
+        height: 36px;
+        padding: 0 14px;
+        font: inherit;
+        font-size: 14px;
+        min-width: 210px;
+      }
+      .controls .scope-note { color: var(--faint); font-size: 12px; max-width: 34ch; margin: 0 0 4px; }
+
+      /* ---------- sections ---------- */
+      section.block {
+        margin-top: 48px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 22px;
+        scroll-margin-top: 16px;
+      }
+      section.block.flash { border-color: var(--accent); }
+      .block-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 12px; margin-bottom: 4px; }
+      .block-head .num {
+        color: var(--faint);
+        font-size: 12px;
+        font-weight: 500;
+        font-variant-numeric: tabular-nums;
+      }
+      .block-head h2 { margin: 0; font-size: 18px; font-weight: 500; }
+      .block-head .takeaway { margin-left: auto; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .block-head .takeaway b { color: var(--ink); font-weight: 500; }
+      .sim-note { color: var(--faint); font-size: 12px; margin: 2px 0 18px; }
+      .charts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: start; }
+      .chart-card h3 { margin: 0 0 2px; font-size: 14px; font-weight: 500; }
+      .chart-card .cap { color: var(--muted); font-size: 12px; margin: 0 0 12px; line-height: 1.5; }
+      .chart-card svg { width: 100%; height: auto; display: block; }
+      .chart-card svg text { font-family: "Inter", system-ui, sans-serif; }
+      .legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; font-size: 12px; color: var(--muted); }
+      .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+      .legend .sw.line-swatch { height: 3px; border-radius: 2px; vertical-align: 3px; }
+      .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); margin-top: var(--gap); }
+      .stat {
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 16px 18px;
+      }
+      .stat .v { font-size: 24px; font-weight: 400; font-variant-numeric: tabular-nums; }
+      .stat .k { color: var(--muted); font-size: 12px; margin-top: 3px; line-height: 1.5; }
+
+      /* ---------- table ---------- */
+      .table-scroll { overflow-x: auto; }
+      table { border-collapse: collapse; width: 100%; min-width: 880px; font-size: 14px; font-variant-numeric: tabular-nums; }
+      th, td { padding: 12px; text-align: right; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+      th { color: var(--muted); font-size: 12px; font-weight: 500; }
+      th:first-child, td:first-child { text-align: left; }
+      td.num, th.num { font-variant-numeric: tabular-nums; }
+      tbody tr { cursor: pointer; }
+      tbody tr:hover { background: var(--panel-soft); }
+      tbody tr.selected { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+      .pill {
+        display: inline-block;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 500;
+      }
+      .pill.won { background: #d4edda; color: var(--accent); }
+      .pill.lost { background: #e9ecef; color: var(--ink); }
+      .pill.brief { background: #d4edda; color: var(--accent); }
+      .pill.nobrief { background: #e9ecef; color: var(--muted); }
+      .var-over { color: var(--negative-ink); }
+      tfoot td { font-weight: 500; border-top: 1px solid var(--line); border-bottom: none; }
+      .empty-row td { text-align: center; color: var(--muted); padding: 26px 12px; }
+
+      footer { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 20px; color: var(--muted); font-size: 14px; }
+      footer .sim-badge { margin-bottom: 10px; }
+      footer p { max-width: 75ch; }
+
+      @media (max-width: 860px) {
+        .kpis { grid-template-columns: 1fr 1fr; }
+        .insights, .charts { grid-template-columns: 1fr; }
+        .stat-row { grid-template-columns: 1fr; }
+        .block-head .takeaway { margin-left: 0; }
+      }
+
+      @media (max-width: 700px) {
+        .wrap { padding: 0 16px 48px; }
+        .topbar-right { display: none; }
+        .logo { display: inline-flex; }
+        .topbar-actions { display: flex; }
+        .table-scroll { overflow-x: visible; }
+        table { min-width: 0; }
+        thead { display: none; }
+        table, tbody, tfoot, tr, td { display: block; }
+        tbody tr {
+          border: 1px solid var(--line);
+          border-radius: var(--radius);
+          margin-bottom: var(--gap);
+          padding: 10px 16px;
+          background: var(--panel-soft);
+        }
+        tbody td {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          gap: 16px;
+          border-bottom: 1px solid var(--rule);
+          padding: 8px 0;
+          white-space: normal;
+          text-align: right;
+        }
+        tbody td:last-child { border-bottom: none; }
+        tbody td::before {
+          content: attr(data-k);
+          color: var(--faint);
+          font-size: 12px;
+          font-weight: 500;
+        }
+        tbody td:first-child { font-weight: 500; font-size: 14px; }
+        tbody td:first-child::before { content: ""; }
+        tfoot { border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 16px; }
+        tfoot td { border-bottom: 1px solid var(--rule); padding: 8px 0; text-align: left; white-space: normal; }
+        tfoot td:empty { display: none; }
+        tfoot td:nth-of-type(4)::before { content: "Bid total — "; color: var(--faint); }
+        tfoot td:nth-of-type(5)::before { content: "Estimate total — "; color: var(--faint); }
+        tfoot td:nth-of-type(6)::before { content: "Actual cost total — "; color: var(--faint); }
+        tfoot td:nth-of-type(7)::before { content: "Overall variance — "; color: var(--faint); }
+        tfoot td:nth-of-type(8)::before { content: "Estimated hours — "; color: var(--faint); }
+        tfoot td:nth-of-type(9)::before { content: "Actual hours — "; color: var(--faint); }
+        tfoot td:nth-of-type(11)::before { content: "Lead → award — "; color: var(--faint); }
+      }
+      /* ---------- dashboard overview grid: glance first, expand for detail ---------- */
+      header.top { padding-top: 20px; }
+      header.top .sub { margin-top: 16px; }
+      .controls { margin-top: 18px; }
+      .kpi { padding: 14px 16px 10px; }
+      .dash-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--gap);
+        margin-top: var(--gap);
+        align-items: stretch;
+      }
+      .dash-grid section.block { margin-top: 0; padding: 18px 20px; }
+      .dash-grid .insights {
+        display: block;
+        margin-top: 0;
+        padding: 18px 20px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+      }
+      .card.expanded { grid-column: 1 / -1; border-color: var(--accent); }
+      .card .card-toggle { cursor: pointer; }
+      .card .card-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+      .chev { margin-left: 10px; color: var(--faint); font-size: 14px; line-height: 1; flex: 0 0 auto; align-self: flex-start; margin-top: 2px; white-space: nowrap; transition: transform 0.18s ease; }
+      .card.expanded .chev { transform: rotate(180deg); color: var(--accent); }
+      .card-summary { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 8px; cursor: pointer; }
+      .card-detail { border-top: 1px solid var(--rule); margin-top: 14px; padding-top: 16px; }
+      .mini-bar { height: 6px; background: var(--panel-2); border-radius: 99px; margin-top: 10px; overflow: hidden; }
+      .mini-bar span { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+      .mini-cap { font-size: 12px; color: var(--faint); margin-top: 6px; font-variant-numeric: tabular-nums; }
+      .mini-rows { margin-top: 8px; }
+      .mini-insight { display: flex; align-items: flex-start; gap: 8px; margin-top: 10px; font-size: 13px; line-height: 1.5; color: var(--ink); }
+      .mini-insight .mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px; height: 18px;
+        border-radius: 50%;
+        font-size: 11px;
+        font-weight: 600;
+        flex: none;
+        margin-top: 1px;
+      }
+      .mini-insight.good .mark { background: #d4edda; color: var(--accent); }
+      .mini-insight.odd .mark { background: #fff3cd; color: var(--warning); }
+      .mini-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink); }
+      .mini-more { font-size: 12px; color: var(--faint); margin-top: 6px; }
+      .lanes-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+      .lanes-wrap .lane { background: var(--panel-soft); }
+      .charts.single { grid-template-columns: 1fr; }
+      .charts.single .chart-card { max-width: 660px; }
+      @media (max-width: 1000px) {
+        .dash-grid { grid-template-columns: 1fr 1fr; }
+      }
+      @media (max-width: 700px) {
+        .dash-grid { grid-template-columns: 1fr; }
+        .card.expanded { grid-column: auto; }
+        .lanes-wrap { grid-template-columns: 1fr; }
+      }
+      /* ---------- Grafana-style panel language ---------- */
+      .dash-grid { gap: 10px; }
+      .dash-grid section.block, .dash-grid .insights { padding: 0; overflow: hidden; }
+      .card .block-head {
+        align-items: flex-start;
+        flex-wrap: nowrap;
+        margin-bottom: 0;
+        padding: 11px 16px;
+        border-bottom: 1px solid var(--rule);
+      }
+      .card .block-head h2 { flex: 0 1 auto; min-width: 0; }
+      .card .block-head .takeaway { flex: 1 1 auto; min-width: 0; text-align: right; }
+      .card .block-head .num { flex: none; padding-top: 2px; }
+      .card .block-head h2 { font-size: 14px; font-weight: 600; }
+      .card .block-head .num { font-size: 11px; }
+      .card .block-head .takeaway { font-size: 12.5px; }
+      .card-summary { margin-top: 0; padding: 12px 16px 14px; }
+      .card-detail { border-top: none; margin-top: 0; padding: 16px; }
+      .charts { gap: 10px; }
+      .lanes-wrap { gap: 10px; }
+      .lanes-wrap .lane { padding: 16px; }
+      .chart-card { background: #ffffff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+      .chart-card h3 { margin: 0; padding: 9px 14px; border-bottom: 1px solid var(--rule); font-size: 13px; font-weight: 600; }
+      .chart-card .cap { padding: 10px 14px 0; margin: 0 0 8px; }
+      .chart-card > div { padding: 0 8px; }
+      .chart-card .legend { padding: 0 14px 12px; margin-top: 10px; }
+      .kpi .value { font-size: 28px; font-weight: 500; }
+      .mini-chart { margin-top: 10px; }
+      .mini-chart svg { width: 100%; height: auto; display: block; }
+      .bb-row { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--muted); margin-top: 7px; }
+      .bb-row .bb-lab { width: 148px; flex: none; }
+      .bb-track { flex: 1; height: 8px; background: var(--panel-2); border-radius: 99px; overflow: hidden; }
+      .bb-fill { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+      .bb-fill.grey { background: #6c757d; }
+      .bb-val { color: var(--ink); flex: none; font-variant-numeric: tabular-nums; }
+      .brief-viz { grid-column: 1 / -1; background: #ffffff; border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px 14px; }
+      .brief-viz h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+      .tr-picker { order: 3; margin-left: auto; }
+      .var-ctl { order: 1; }
+      .controls .scope-note { order: 2; }
+      .tooltip {
+        position: fixed; z-index: 60; pointer-events: none;
+        background: #343a40; border: 1px solid #343a40; color: #ffffff; border-radius: 8px;
+        padding: 8px 11px; font-size: 12px; line-height: 1.65; color: #ffffff;
+        opacity: 0; transition: opacity 0.12s ease; max-width: 280px;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+      }
+      .tooltip .dot { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 7px; }
+      .hz { cursor: crosshair; }
+      /* ---------- field labor ---------- */
+      .labor-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
+      .labor-mini-stat .lv { font-size: 20px; font-weight: 500; line-height: 1.2; font-variant-numeric: tabular-nums; }
+      .labor-mini-stat .lk { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+      .labor-mini-stat.wide { grid-column: 1 / -1; }
+      .labor-mini-stat.wide .lv { font-size: 14px; font-weight: 500; }
+      .roster-panel { background: #ffffff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; margin-top: 10px; }
+      .roster-panel h3 { margin: 0; padding: 9px 14px; border-bottom: 1px solid var(--rule); font-size: 13px; font-weight: 600; }
+      .roster-body { padding: 12px 14px 14px; }
+      .roster-job { padding: 10px 0; border-top: 1px solid var(--rule); }
+      .roster-job:first-child { border-top: none; padding-top: 2px; }
+      .roster-job-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+      .roster-job-name { font-weight: 500; font-size: 13.5px; }
+      .roster-job-meta { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+      .roster-people { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .roster-chip { display: inline-flex; gap: 6px; align-items: center; background: var(--panel-soft); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; font-size: 12px; }
+      .roster-chip b { font-weight: 500; }
+      .roster-chip span { color: var(--muted); font-variant-numeric: tabular-nums; }
+      .labor-subhead { font-size: 13px; font-weight: 600; margin: 18px 0 4px; padding: 9px 14px; background: #ffffff; border: 1px solid var(--line); border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; }
+      .labor-table-wrap { border: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); overflow-x: auto; background: #ffffff; }
+      .labor-table-wrap table { min-width: 860px; }
+      .pill.active { background: #d4edda; color: var(--accent); }
+      .pill.complete { background: #e9ecef; color: var(--muted); }
+      @media (max-width: 700px) {
+        .labor-table-wrap { overflow-x: visible; border: none; background: transparent; }
+        .labor-table-wrap table { min-width: 0; }
+        #labor-table tfoot td:nth-of-type(3)::before { content: "Total hours — "; color: var(--faint); }
+        #labor-table tfoot td:nth-of-type(6)::before { content: "Est. total — "; color: var(--faint); }
+        #labor-table tfoot td:nth-of-type(7)::before { content: "Actual total — "; color: var(--faint); }
+      }
+      /* ---------- materials ---------- */
+      .mat-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; margin-top: 10px; }
+      .mat-mini-stat .lv { font-size: 20px; font-weight: 500; line-height: 1.2; font-variant-numeric: tabular-nums; }
+      .mat-mini-stat .lk { font-size: 11.5px; color: var(--muted); line-height: 1.4; }
+      .mat-mini-stat.wide { grid-column: 1 / -1; }
+      .mat-mini-stat.wide .lv { font-size: 14px; font-weight: 500; }
+      .mat-subhead { font-size: 13px; font-weight: 600; margin: 18px 0 4px; padding: 9px 14px; background: #ffffff; border: 1px solid var(--line); border-bottom: none; border-radius: var(--radius) var(--radius) 0 0; }
+      .mat-table-wrap { border: 1px solid var(--line); border-radius: 0 0 var(--radius) var(--radius); overflow-x: auto; background: #ffffff; }
+      .mat-table-wrap table { min-width: 820px; }
+      .mat-cats-cell { text-align: left; white-space: normal; min-width: 210px; line-height: 1.5; }
+      @media (max-width: 700px) {
+        .mat-table-wrap { overflow-x: visible; border: none; background: transparent; }
+        .mat-table-wrap table { min-width: 0; }
+        #materials-table tfoot td:nth-of-type(3)::before { content: "Est. material total — "; color: var(--faint); }
+        #materials-table tfoot td:nth-of-type(4)::before { content: "Actual material total — "; color: var(--faint); }
+        #materials-table tfoot td:nth-of-type(5)::before { content: "Overall variance — "; color: var(--faint); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        .chev { transition: none; }
+      }
+      /* ================= AdminLTE conventional restructure ================= */
+      :root {
+        color-scheme: light;
+        --bg: #f4f6f9;
+        --panel: #ffffff;
+        --panel-2: #e9ecef;
+        --panel-soft: #f8f9fa;
+        --line: #dee2e6;
+        --rule: #e9ecef;
+        --control: #adb5bd;
+        --ink: #212529;
+        --muted: #495057;
+        --faint: #6c757d;
+        --accent: #007bff;
+        --accent-soft: rgba(0, 123, 255, 0.10);
+        --negative: #dc3545;
+        --negative-ink: #dc3545;
+        --warning: #ffc107;
+        --radius: 4px;
+        --gap: 16px;
+      }
+      body { background: var(--bg); }
+      /* ---------- dark sidebar ---------- */
+      .sidebar {
+        position: fixed; left: 0; top: 0; bottom: 0; width: 250px; z-index: 90;
+        background: #343a40; color: #c2c7d0; display: flex; flex-direction: column;
+        overflow-y: auto; transition: transform 0.2s ease;
+      }
+      .sidebar-brand { padding: 16px 18px 14px; border-bottom: 1px solid #4b545c; }
+      .sidebar-brand .brand-name { color: #ffffff; font-size: 17px; font-weight: 600; display: flex; align-items: center; gap: 9px; }
+      .sidebar-brand .brand-mark { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: var(--accent); border-radius: 6px; flex: none; }
+      .sidebar-brand .brand-sub { color: #adb5bd; font-size: 12px; margin-top: 5px; }
+      .side-head { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; color: #828a91; padding: 16px 18px 6px; }
+      .side-nav { padding: 0 10px 18px; display: flex; flex-direction: column; gap: 2px; }
+      .side-link {
+        display: flex; align-items: center; gap: 11px; width: 100%;
+        background: none; border: 0; border-radius: 4px; cursor: pointer;
+        color: #c2c7d0; font: inherit; font-size: 14px; text-align: left; padding: 9px 10px;
+      }
+      .side-link svg { flex: none; opacity: 0.85; }
+      .side-num { flex: none; width: 20px; font-size: 11px; font-weight: 600; color: #828a91; font-variant-numeric: tabular-nums; }
+      .side-link.active .side-num, .side-link:hover .side-num { color: #ffffff; }
+      .side-link:hover, .side-link:focus-visible { background: rgba(255, 255, 255, 0.1); color: #ffffff; outline: none; }
+      .side-link.active { background: var(--accent); color: #ffffff; }
+      .sidebar .side-foot { margin-top: auto; padding: 14px 18px; border-top: 1px solid #4b545c; color: #828a91; font-size: 12px; line-height: 1.5; }
+      .scrim { display: none; }
+      /* ---------- content shell ---------- */
+      .wrap { max-width: none; margin: 0 0 0 250px; padding: 0 24px 64px; transition: margin 0.2s ease; }
+      body.sidebar-closed .sidebar { transform: translateX(-100%); visibility: hidden; }
+      body.sidebar-closed .wrap { margin-left: 0; }
+      .topbar { background: #ffffff; margin: 0 -24px; padding: 0 24px; height: 57px; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 60; }
+      .topbar .wordmark { color: var(--ink); }
+      .topbar-actions { display: flex; }
+      .logo path { fill: #ffffff; }
+      .head-row { display: flex; align-items: baseline; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+      .head-row h1 { margin-bottom: 0; }
+      .crumbs { font-size: 13px; color: var(--faint); white-space: nowrap; }
+      .crumbs b { color: #007bff; font-weight: 500; }
+      .crumbs .sep { margin: 0 6px; color: var(--control); }
+      .sim-badge { background: var(--warning); color: #212529; }
+      /* ---------- small boxes (info boxes) ---------- */
+      .kpis { gap: 16px; margin-top: 20px; }
+      .small-box { border-radius: 4px; color: #ffffff; position: relative; overflow: hidden; box-shadow: 0 0 1px rgba(0,0,0,0.12), 0 1px 3px rgba(0,0,0,0.18); display: flex; flex-direction: column; }
+      .small-box.bg-blue, .small-box.bg-green, .small-box.bg-yellow, .small-box.bg-red, .small-box.bg-neutral { background: #343a40; color: #ffffff; }
+      .small-box .inner { padding: 14px 16px 10px; position: relative; z-index: 2; }
+      .small-box .inner h3 { margin: 0; font-size: 30px; font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; }
+      .small-box .inner h3 .unit { font-size: 14px; font-weight: 500; margin-left: 2px; }
+      .small-box .inner p { margin: 3px 0 0; font-size: 14px; font-weight: 500; }
+      .small-box .basis { font-size: 12px; line-height: 1.45; opacity: 0.88; margin-top: 4px; max-width: 30ch; }
+      .small-box .icon { position: absolute; right: 10px; top: 8px; z-index: 1; color: rgba(0, 0, 0, 0.16); pointer-events: none; }
+      .small-box .icon { color: rgba(255, 255, 255, 0.22); }
+      .small-box-footer {
+        margin-top: auto; display: block; width: 100%; text-align: center;
+        background: rgba(0, 0, 0, 0.16); color: inherit; border: 0; cursor: pointer;
+        font: inherit; font-size: 13px; padding: 6px 10px; position: relative; z-index: 2;
+      }
+      .small-box-footer:hover, .small-box-footer:focus-visible { background: rgba(0, 0, 0, 0.26); outline: none; }
+      /* ---------- cards on light ---------- */
+      .dash-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; align-items: stretch; }
+      .dash-grid .card { height: 100%; display: flex; flex-direction: column; }
+      .dash-grid .card .card-summary { flex: 1 1 auto; }
+      .dash-grid .card.expanded { height: auto; }
+      .dash-grid section.block, .dash-grid .insights { box-shadow: 0 0 1px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.14); }
+      .card .block-head { background: #ffffff; }
+      .card.expanded { border-color: var(--accent); }
+      .chart-card { background: #ffffff; }
+      .brief-viz { background: var(--panel-soft); }
+      .roster-panel { background: #ffffff; }
+      .roster-chip { background: var(--panel-soft); }
+      .labor-subhead, .mat-subhead { background: var(--panel-soft); }
+      .labor-table-wrap, .mat-table-wrap { background: #ffffff; }
+      .insight { background: #ffffff; }
+      .insight:hover, .insight:focus-visible { background: #eef3f8; }
+      .lane.good .mark { background: #d4edda; color: #155724; }
+      .lane.odd .mark { background: #fff3cd; color: #856404; }
+      .lane.good .insight .fig { color: #1e7e34; }
+      .lane.odd .insight .fig { color: #856404; }
+      .mini-insight.good .mark { background: #d4edda; color: #155724; }
+      .mini-insight.odd .mark { background: #fff3cd; color: #856404; }
+      .pill.won { background: #d4edda; color: #155724; }
+      .pill.brief { background: #d4edda; color: #155724; }
+      .pill.active { background: #d4edda; color: #155724; }
+      .pill.lost { background: #e9ecef; color: #495057; }
+      .pill.nobrief { background: #e9ecef; color: #6c757d; }
+      .pill.complete { background: #e9ecef; color: #6c757d; }
+      .controls select { background: #ffffff; }
+      .controls { box-shadow: 0 0 1px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.12); }
+      .tooltip { background: #343a40; border-color: #343a40; color: #ffffff; }
+      footer .sim-badge { background: var(--warning); color: #212529; }
+      @media (max-width: 1100px) { .kpis { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } .card.expanded { grid-column: auto; } }
+      @media (max-width: 700px) {
+        .sidebar { display: none; }
+        body.sidebar-open .sidebar { display: flex; box-shadow: 0 0 32px rgba(0,0,0,0.4); animation: side-in 0.2s ease; }
+        @keyframes side-in { from { transform: translateX(-100%); } to { transform: none; } }
+        .tr-picker { margin-left: 0; }
+        .scrim { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 85; }
+        body.sidebar-open .scrim { display: block; }
+        .wrap { margin-left: 0; padding: 0 16px 48px; }
+        body.sidebar-closed .wrap { margin-left: 0; }
+        .topbar { margin: 0 -16px; padding: 0 16px; }
+        .kpis { grid-template-columns: 1fr; }
+        .labor-table-wrap, .mat-table-wrap { background: transparent; }
+      }
+      @media (prefers-reduced-motion: reduce) { .sidebar, .wrap { transition: none; } }
+      /* ================= Review round 2 fixes ================= */
+      /* 1. Sample jobs spans the full grid row — no orphan gap */
+      .dash-grid #sec-jobs { grid-column: 1 / -1; }
+      .dash-grid #sec-jobs.card.expanded { grid-column: 1 / -1; }
+      /* 2. KPI tiles: white, dark text, thin slate accent line on top, light More-info strip */
+      .kpis .small-box { background: #ffffff; color: var(--ink); border: 1px solid var(--line); border-top: 3px solid #343a40; box-shadow: 0 0 1px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.10); }
+      .kpis .small-box .icon { color: rgba(0, 0, 0, 0.07); }
+      .kpis .small-box .inner p { color: var(--muted); }
+      .kpis .small-box-footer { background: #e9ecef; color: #212529; border-top: 1px solid var(--line); }
+      .kpis .small-box-footer:hover, .kpis .small-box-footer:focus-visible { background: #cfd6dd; color: #212529; }
+      .kpi-delta { margin-top: 6px; font-size: 12.5px; font-weight: 600; line-height: 1.4; font-variant-numeric: tabular-nums; }
+      .kpi-delta.fav { color: #1e7e34; }
+      .kpi-delta.unfav { color: #dc3545; }
+      .kpi-delta.neutral { color: #6c757d; }
+      .kpi-delta .delta-lab { color: var(--faint); font-weight: 500; }
+      /* 5. Cards 03–07: takeaway gets its own full-width row under the header */
+      #sec-time .block-head, #sec-cost .block-head, #sec-fromto .block-head, #sec-fromto-hours .block-head, #sec-accuracy .block-head { flex-wrap: wrap; }
+      #sec-time .block-head .takeaway, #sec-cost .block-head .takeaway, #sec-fromto .block-head .takeaway, #sec-fromto-hours .block-head .takeaway, #sec-accuracy .block-head .takeaway { order: 5; flex: 1 1 100%; text-align: left; margin-top: 3px; white-space: normal; }
+      #sec-time .block-head .expand-label, #sec-cost .block-head .expand-label, #sec-fromto .block-head .expand-label, #sec-fromto-hours .block-head .expand-label, #sec-accuracy .block-head .expand-label { order: 3; margin-left: auto; }
+      #sec-time .block-head .chev, #sec-cost .block-head .chev, #sec-fromto .block-head .chev, #sec-fromto-hours .block-head .chev, #sec-accuracy .block-head .chev { order: 4; margin-left: 5px; }
+      /* 7. Clickability: always-visible Expand/Collapse label + hover states */
+      .expand-label { flex: none; align-self: flex-start; margin-top: 3px; margin-left: 8px; font-size: 12px; font-weight: 600; color: var(--accent); white-space: nowrap; }
+      .card .card-toggle:hover { background: #eef3f8; }
+      .card .card-summary:hover { background: #f1f5f9; }
+      .card:hover { border-color: var(--control); }
+      .card.expanded:hover { border-color: var(--accent); }
+      /* 8. Illustrative label for insights */
+      .illus-badge { display: inline-block; background: #fff3cd; color: #856404; border: 1px solid #f0d488; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+      .illus-badge.detail-badge { margin: 0 0 10px; }
+      /* ================= Expert-level polish — typography, spacing, focus, contrast ================= */
+      :root {
+        --muted: #3d444b;
+        --faint: #5a6268;
+        --fs-xs: 12px; --fs-sm: 13px; --fs-base: 14px; --fs-title: 15px; --fs-kpi: 28px;
+        --space-card: 16px; --space-gap: 16px;
+      }
+      body { font-size: var(--fs-base); letter-spacing: -0.005em; }
+      .card .block-head { padding: 14px var(--space-card) 12px; min-height: 52px; }
+      .card .block-head h2 { font-size: var(--fs-title); font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+      .card .block-head .num { font-size: var(--fs-xs); }
+      .card .block-head .takeaway { font-size: var(--fs-sm); line-height: 1.45; }
+      .card-summary { padding: 14px var(--space-card) 16px; font-size: var(--fs-sm); line-height: 1.55; }
+      .card-detail { padding: var(--space-card); }
+      .chart-card h3 { font-size: var(--fs-sm); font-weight: 600; letter-spacing: -0.005em; }
+      .chart-card .cap, .sim-note, .mini-cap, .legend { font-size: var(--fs-xs); line-height: 1.55; }
+      .stat .k, .kpi .basis, .small-box .basis { font-size: var(--fs-xs); line-height: 1.55; }
+      .small-box .inner h3 { font-size: var(--fs-kpi); letter-spacing: -0.02em; }
+      .small-box .inner p { font-size: var(--fs-base); }
+      th { font-size: var(--fs-xs); letter-spacing: 0.01em; }
+      td, .insight { font-size: var(--fs-base); }
+      .insight .fig, .insight .go { font-size: var(--fs-xs); }
+      /* Contrast: muted/faint on white now ≥ 7:1 / 5.9:1 (WCAG AA for small text) */
+      .sim-note, .mini-cap, .topbar-right, .crumbs, .side-foot { color: var(--faint); }
+      .card .block-head .takeaway, .chart-card .cap, .stat .k { color: var(--muted); }
+      /* Visible focus — matches hover treatment, keyboard users */
+      :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+      .side-link:focus-visible, .card-toggle:focus-visible, .small-box-footer:focus-visible, .insight:focus-visible, select:focus-visible, .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; background: #eef3f8; }
+      .side-link:focus-visible { background: rgba(255,255,255,0.14); color: #ffffff; outline-color: #ffffff; }
+      select:focus-visible { border-color: var(--accent); }
+      /* Touch targets ≥ 44px on phone widths */
+      @media (max-width: 700px) {
+        .side-link { min-height: 44px; padding-top: 12px; padding-bottom: 12px; }
+        .card .card-toggle { min-height: 48px; align-items: center; }
+        .controls select { height: 44px; min-height: 44px; }
+        .small-box-footer { min-height: 44px; display: flex; align-items: center; justify-content: center; }
+        .icon-btn { width: 44px; height: 44px; }
+        .insight { min-height: 44px; }
+        tbody tr { min-height: 44px; }
+      }
+      @media (min-width: 701px) {
+        .card .card-toggle { min-height: 44px; }
+        .side-link { min-height: 40px; }
+      }
+      /* How to read this — single definitions block */
+      .how-to-read { margin-top: 20px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; box-shadow: 0 0 1px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.08); }
+      .how-to-read h2 { margin: 0 0 4px; font-size: var(--fs-title); font-weight: 600; }
+      .how-to-read > p { margin: 0 0 12px; color: var(--muted); font-size: var(--fs-sm); }
+      .defs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 28px; margin: 0; }
+      .defs div { display: grid; grid-template-columns: 148px 1fr; gap: 10px; padding: 7px 0; border-top: 1px solid var(--rule); }
+      .defs dt { font-weight: 600; font-size: var(--fs-sm); }
+      .defs dd { margin: 0; color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+      @media (max-width: 700px) { .defs { grid-template-columns: 1fr; } .defs div { grid-template-columns: 1fr; gap: 2px; } }
+
+      /* ---------- Decision-ready revision additions ---------- */
+      .takeaways { margin-top: 18px; background: var(--panel); border: 1px solid var(--line); border-top: 3px solid #343a40; border-radius: var(--radius); padding: 16px 20px 18px; box-shadow: 0 0 1px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.08); }
+      .takeaways h2 { margin: 0 0 10px; font-size: var(--fs-title,15px); font-weight: 600; }
+      .takeaway-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 22px; }
+      .takeaway-item { border-top: 1px solid var(--rule); padding-top: 9px; font-size: 13.5px; line-height: 1.55; }
+      .takeaway-item b { display: block; font-size: 15px; margin-bottom: 2px; }
+      .takeaway-item .dir { color: var(--faint); font-size: 12px; }
+      @media (max-width: 700px) { .takeaway-grid { grid-template-columns: 1fr; } }
+      .sample-note { margin-top: 12px; background: #fff8e1; border: 1px solid #f0d488; border-radius: var(--radius); padding: 10px 14px; font-size: 12.5px; line-height: 1.55; color: var(--ink); }
+      .kpi-target { margin-top: 5px; font-size: 12px; color: var(--muted); line-height: 1.45; }
+      .kpi-target b { font-weight: 600; }
+      .sowhat { margin-top: 10px; padding: 9px 12px; background: var(--panel-soft); border: 1px solid var(--rule); border-radius: var(--radius); font-size: 12.5px; line-height: 1.5; color: var(--ink); }
+      .sowhat::before { content: "So what — "; font-weight: 600; }
+      .dash-grid #sec-pipeline { grid-column: 1 / -1; }
+      .dash-grid #sec-pipeline.card.expanded { grid-column: 1 / -1; }
+      #pipeline-stats { grid-template-columns: repeat(4, 1fr); }
+      @media (max-width: 860px) { #pipeline-stats { grid-template-columns: 1fr 1fr; } }
+      @media (max-width: 700px) { #pipeline-stats { grid-template-columns: 1fr; } }
+      .lost-wrap { margin-top: 22px; }
+      .lost-wrap h3 { font-size: 13.5px; font-weight: 600; margin: 0 0 4px; }
+      .lost-wrap .cap { color: var(--muted); font-size: 12px; margin: 0 0 10px; line-height: 1.5; }
+      .type-bars { margin-top: 14px; }
+      .type-bars h3 { font-size: 13px; font-weight: 600; margin: 0 0 6px; }
+      .acc-break { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 22px; margin-top: 14px; }
+      @media (max-width: 700px) { .acc-break { grid-template-columns: 1fr; } }
+      .acc-break .ab-box { background: var(--panel-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 12px 14px; font-size: 13px; line-height: 1.6; }
+      .acc-break .ab-box h3 { margin: 0 0 6px; font-size: 13px; font-weight: 600; }
+      /* Remove redundant chart borders where the card already frames the chart */
+      .dash-grid .chart-card { border-color: var(--rule); }
+      .labor-subhead, .mat-subhead { font-size: var(--fs-sm); }
+      /* ---------- Revision: tile footnote, survivorship, assumption badges, collapsed How to Read ---------- */
+      .kpi-footnote { margin-top: 8px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+      .kpi-survivorship { margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--rule); font-size: 12px; color: var(--muted); line-height: 1.5; }
+      .assumption-badge { display: inline-block; background: #fff3cd; color: #856404; border: 1px solid #f0d488; font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle; white-space: nowrap; }
+      .how-to-read { padding: 0; overflow: hidden; }
+      .how-to-read .block-head { display: flex; align-items: center; gap: 10px; padding: 14px 20px; margin: 0; cursor: pointer; min-height: 52px; flex-wrap: nowrap; }
+      .how-to-read .block-head h2 { flex: 1 1 auto; margin: 0; }
+      .how-to-read .block-head:hover { background: #eef3f8; }
+      .how-to-read .card-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .how-to-read .card-detail { border-top: 1px solid var(--rule); padding: 14px 20px 18px; margin: 0; }
+      .how-to-read .card-detail > p { margin: 0 0 12px; color: var(--muted); font-size: 13px; line-height: 1.55; }
+      /* ---------- Revision HTML_4: equal-height tiles, neutral volume deltas, accuracy rebalance, jobs header, phone collapse ---------- */
+      .kpis { align-items: stretch; grid-auto-rows: 1fr; }
+      .kpis .small-box { height: 100%; display: flex; flex-direction: column; }
+      .kpis .small-box .inner { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; }
+      .kpis .small-box-footer { margin-top: auto; }
+      .kpi-context { margin-top: 6px; font-size: 12px; color: var(--muted); line-height: 1.5; }
+      .kpi-context-counts { font-size: 12px; color: var(--muted); line-height: 1.5; font-variant-numeric: tabular-nums; }
+      .kpi-secondary { margin-top: 6px; font-size: 20px; font-weight: 500; line-height: 1.2; font-variant-numeric: tabular-nums; }
+      .kpi-sublabel { font-size: 12px; color: var(--muted); line-height: 1.45; margin-top: 2px; }
+      .jobs-winrate-line { font-size: 13px; color: var(--muted); line-height: 1.55; margin: 0 0 12px; font-variant-numeric: tabular-nums; }
+      /* ---------- Final polish: data-as-of stamp, takeaway links, tile label alignment, phone collapse tightening ---------- */
+      .data-asof { margin: 10px 0 0; font-size: 12.5px; color: #495057; line-height: 1.5; font-variant-numeric: tabular-nums; }
+      @media (min-width: 701px) {
+        .kpis .small-box .inner p { min-height: 23px; white-space: nowrap; }
+      }
+      .takeaway-item { cursor: pointer; border-radius: 4px; }
+      .takeaway-item:hover { background: var(--panel-soft); }
+      .takeaway-link { display: inline-block; margin-top: 5px; font-size: 12.5px; font-weight: 600; color: var(--accent); text-decoration: none; min-height: 24px; }
+      .takeaway-link:hover { text-decoration: underline; }
+      .takeaway-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+      @media (max-width: 700px) {
+        /* Collapsed lower cards (03-10) on phones show title + one-line summary + Expand only:
+           the summary extras (mini charts, bars, rows) stay hidden until the card is opened.
+           Sections 01 and 02 keep their full summaries. */
+        #sec-time:not(.expanded) .card-summary .mini-chart,
+        #sec-time:not(.expanded) .card-summary .mini-cap,
+        #sec-cost:not(.expanded) .card-summary .mini-chart,
+        #sec-cost:not(.expanded) .card-summary .mini-cap,
+        #sec-fromto:not(.expanded) .card-summary .mini-chart,
+        #sec-fromto-hours:not(.expanded) .card-summary .mini-chart,
+        #sec-accuracy:not(.expanded) .card-summary .mini-chart,
+        #sec-accuracy:not(.expanded) .card-summary .mini-cap,
+        #sec-insights:not(.expanded) .card-summary #sum-brief,
+        #sec-insights:not(.expanded) .card-summary .mini-insight,
+        #sec-insights:not(.expanded) .card-summary .illus-badge,
+        #sec-jobs:not(.expanded) .card-summary .mini-rows,
+        #sec-jobs:not(.expanded) .card-summary .mini-cap { display: none; }
+        /* Collapsed lower cards show title + one-line summary + Expand only: the header
+           takeaway row and the So what line appear when the card is opened. */
+        #sec-time:not(.expanded) .block-head .takeaway,
+        #sec-cost:not(.expanded) .block-head .takeaway,
+        #sec-fromto:not(.expanded) .block-head .takeaway,
+        #sec-fromto-hours:not(.expanded) .block-head .takeaway,
+        #sec-accuracy:not(.expanded) .block-head .takeaway,
+        #sec-insights:not(.expanded) .block-head .takeaway,
+        #sec-jobs:not(.expanded) .block-head .takeaway,
+        #sec-pipeline:not(.expanded) .block-head .takeaway,
+        #sec-time:not(.expanded) .card-summary .sowhat,
+        #sec-cost:not(.expanded) .card-summary .sowhat,
+        #sec-fromto:not(.expanded) .card-summary .sowhat,
+        #sec-fromto-hours:not(.expanded) .card-summary .sowhat,
+        #sec-accuracy:not(.expanded) .card-summary .sowhat,
+        #sec-insights:not(.expanded) .card-summary .sowhat,
+        #sec-jobs:not(.expanded) .card-summary .sowhat,
+        #sec-pipeline:not(.expanded) .card-summary .sowhat { display: none; }
+        /* KPI tiles go two-across on phones so the strip stays glanceable */
+        .kpis { grid-template-columns: 1fr 1fr; }
+        .kpis .small-box .inner { padding: 12px 12px 8px; }
+        .takeaways { padding: 14px 16px 16px; }
+        .takeaway-item { font-size: 12.5px; line-height: 1.5; }
+        /* Sections 01/02 stay open with text + mini stats; their mini charts and So what
+           lines wait for the tap, like the lower cards. */
+        #sec-labor:not(.expanded) .card-summary .mini-chart,
+        #sec-labor:not(.expanded) .card-summary .mini-cap,
+        #sec-materials:not(.expanded) .card-summary .mini-chart,
+        #sec-materials:not(.expanded) .card-summary .mini-cap,
+        #sec-labor:not(.expanded) .card-summary .sowhat,
+        #sec-materials:not(.expanded) .card-summary .sowhat { display: none; }
+        .controls .scope-note { display: none; }
+        .kpis .small-box .basis, .kpis .kpi-target { font-size: 11.5px; line-height: 1.45; }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar" id="sidebar" aria-label="Dashboard navigation">
+      <div class="sidebar-brand">
+        <div class="brand-name"><span class="brand-mark" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="#ffffff" aria-hidden="true"><path d="M13 2 4.5 13.5H11L9.8 22 18.5 10H12L13 2z"/></svg></span>Osborne Electric</div>
+        <div class="brand-sub">Management dashboard · Summers-Taylor</div>
+      </div>
+      <div class="side-head">MAIN NAVIGATION</div>
+      <nav class="side-nav">
+        <button class="side-link active" type="button" data-target="overview"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 13a9 9 0 1 1 18 0"/><path d="M12 13l4-4"/></svg><span class="side-num" aria-hidden="true"></span>Overview</button>
+        <button class="side-link" type="button" data-target="sec-labor"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M13 2 4.5 13.5H11L9.8 22 18.5 10H12L13 2z"/></svg><span class="side-num">01</span>Field Labor</button>
+        <button class="side-link" type="button" data-target="sec-materials"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg><span class="side-num">02</span>Materials</button>
+        <button class="side-link" type="button" data-target="sec-time"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg><span class="side-num">03</span>Time Value</button>
+        <button class="side-link" type="button" data-target="sec-cost"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 3v18"/><path d="M16.5 6.5c-.8-1-2.4-1.5-4.5-1.5-2.8 0-4.5 1.3-4.5 3.2 0 4.4 9.4 2.4 9.4 6.6 0 1.9-2 3.2-4.9 3.2-2.1 0-3.9-.6-4.9-1.7"/></svg><span class="side-num">04</span>Dollar Cost</button>
+        <button class="side-link" type="button" data-target="sec-fromto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h13"/><path d="M13 3l4 4-4 4"/><path d="M20 17H7"/><path d="M11 13l-4 4 4 4"/></svg><span class="side-num">05</span>Estimate vs. Actual — Dollars</button>
+        <button class="side-link" type="button" data-target="sec-fromto-hours"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h13"/><path d="M13 3l4 4-4 4"/><path d="M20 17H7"/><path d="M11 13l-4 4 4 4"/></svg><span class="side-num">06</span>Estimate vs. Actual — Time</button>
+        <button class="side-link" type="button" data-target="sec-accuracy"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg><span class="side-num">07</span>Accuracy</button>
+        <button class="side-link" type="button" data-target="sec-insights"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.7.5 1 1.2 1.2 2.1h4.6c.2-.9.5-1.6 1.2-2.1A6 6 0 0 0 12 3z"/></svg><span class="side-num">08</span>Insights</button>
+        <button class="side-link" type="button" data-target="sec-jobs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg><span class="side-num">09</span>Sample Jobs</button>
+        <button class="side-link" type="button" data-target="sec-pipeline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 19V5"/><path d="M4 15c3-2 5 2 8 0s5 2 8 0V6c-3 2-5-2-8 0S7 8 4 6"/></svg><span class="side-num">10</span>Pipeline</button>
+      </nav>
+      <div class="side-foot">Simulated data — for presentation only. No figure here is a real Osborne Electric result.</div>
+    </aside>
+    <div class="scrim" id="scrim" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="topbar-left">
+          <span class="logo" aria-hidden="true"><svg width="14" height="14" viewBox="0 0 24 24" fill="#000000" aria-hidden="true"><path d="M13 2 4.5 13.5H11L9.8 22 18.5 10H12L13 2z"/></svg></span>
+          <div class="wordmark">Osborne Electric <span>— Management dashboard</span></div>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-btn" id="btn-search" type="button" aria-label="Search — jump to the dashboard filters"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></button>
+          <button class="icon-btn" id="btn-menu" type="button" aria-label="Toggle sidebar navigation" aria-pressed="false"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg></button>
+        </div>
+        <div class="topbar-right" id="range-label">Nov 2025 – Oct 2026</div>
+      </div>
+      <header class="top">
+        <span class="sim-badge">Simulated data — for presentation only</span>
+        <div class="head-row">
+          <h1>Osborne Electric<br />Management <span class="accent">Dashboard</span></h1>
+          <nav class="crumbs" aria-label="Breadcrumb"><b>Home</b><span class="sep">/</span>Dashboard<span class="sep">·</span><span id="range-crumb">Nov 2025 – Oct 2026</span></nav>
+        </div>
+        <p class="data-asof" id="data-asof" aria-live="polite"></p>
+        <p class="sub">Simulated sample for <strong>Osborne Electric</strong> — the electrical division of Summers-Taylor.</p>
+      </header>
+
+      <!-- Key takeaways: computed in JS from JOBS + LOST_BIDS -->
+      <div class="takeaways" id="takeaways" aria-label="Key takeaways">
+        <h2>Key Takeaways</h2>
+        <div class="takeaway-grid" id="takeaway-grid"></div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="tr-picker">
+          <label for="period">Time range — applies to the whole dashboard</label>
+          <select id="period">
+            <option value="all">Last 12 months · Nov 2025 – Oct 2026</option>
+            <option value="q1">Nov 2025 – Jan 2026</option>
+            <option value="q2">Feb – Apr 2026</option>
+            <option value="q3">May – Jul 2026</option>
+            <option value="q4">Aug – Oct 2026</option>
+          </select>
+        </div>
+        <div class="var-ctl">
+          <label for="wtype">Job type — jobs table, breakdown &amp; estimate vs. actual charts</label>
+          <select id="wtype">
+            <option value="all">All work types</option>
+            <option value="electrical">Electrical</option>
+            <option value="low-voltage">Low-voltage</option>
+            <option value="service">Service</option>
+            <option value="new-construction">New construction</option>
+          </select>
+        </div>
+        <p class="scope-note">Selecting a job row highlights that job in the estimate vs. actual charts in sections 05–06.</p>
+      </div>
+
+      <!-- KPI strip: every value computed in JS from the dataset below -->
+      <div class="kpis" id="kpis" aria-label="Key figures"></div>
+      <div class="kpi-footnote">Targets are simulated placeholders; replace with management-set targets. Lost bids have no actual cost, so overruns on bids we didn't win are not measured here.</div>
+      <div class="sample-note" id="sample-note" role="note"></div>
+
+      <!-- Insights: computed from the full simulated job set -->
+      <div class="insights">
+        <div class="lane good">
+          <h2><span class="mark">✓</span> What's beneficial</h2>
+          <p class="lane-note">Patterns in the simulated data that argue for the AI tool. Each comparison shows how many jobs it rests on. These go together, but we can't say one caused the other. Select one to jump to the chart behind it.</p>
+          <div id="insights-good"></div>
+        </div>
+        <div class="lane odd">
+          <h2><span class="mark">!</span> What's counterintuitive</h2>
+          <p class="lane-note">Patterns that cut against the obvious story. They are worth a second look before you draw conclusions.</p>
+          <div id="insights-odd"></div>
+        </div>
+      </div>
+
+      <!-- 1. Value case – time -->
+      <section class="block" id="sec-time">
+        <div class="block-head">
+          <span class="num">03</span>
+          <h2>Value Case — Time</h2>
+          <span class="takeaway" id="take-time"></span>
+        </div>
+        <p class="sim-note">Simulated figures — they illustrate the pattern, not Osborne Electric's actual results.</p>
+        <div class="charts">
+          <div class="chart-card">
+            <h3>Hours the AI Tool Gives Back Each Month</h3>
+            <p class="cap">Y-axis: hours. The stacked areas show where the time comes back. The grey line is the hours the same tasks took by hand. Hover a month for its figures.</p>
+            <div id="chart-hours"></div>
+            <div class="legend" id="legend-hours"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Days From Lead to Bid Submitted</h3>
+            <p class="cap">Y-axis: days. The bars split into days spent estimating and days spent waiting on others for drawings, answers, and approvals.</p>
+            <div id="chart-cycle"></div>
+            <div class="legend" id="legend-cycle"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. Dollar cost average -->
+      <section class="block" id="sec-cost">
+        <div class="block-head">
+          <span class="num">04</span>
+          <h2>Dollar Cost Average</h2>
+          <span class="takeaway" id="take-cost"></span>
+        </div>
+        <p class="sim-note">Simulated figures — they illustrate the pattern, not Osborne Electric's real results. Cost means estimator time and bid effort cost inside the simulated model.</p>
+        <div class="charts">
+          <div class="chart-card">
+            <h3>Average Cost per Bid Over Time</h3>
+            <p class="cap">Y-axis: $ per bid. Cost per bid: what we spend, on average, to prepare and submit one bid. AI-assisted vs. done by hand, month by month. Hover a month for its figures.</p>
+            <div id="chart-cost-time"></div>
+            <div class="legend" id="legend-cost-time"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Average Dollars Spent — AI-Assisted vs. Done by Hand</h3>
+            <p class="cap">Y-axis: $. Three averages from the same simulated totals. We divide total bid spend by bids looked at, by bids submitted, and by jobs won.</p>
+            <div id="chart-cost"></div>
+            <div class="legend" id="legend-cost"></div>
+          </div>
+        </div>
+        <div class="stat-row" id="cost-stats"></div>
+      </section>
+
+      <!-- 3. From–to -->
+      <section class="block" id="sec-fromto">
+        <div class="block-head">
+          <span class="num">05</span>
+          <h2>Estimate vs. Actual Cost</h2>
+          <span class="takeaway" id="take-fromto"></span>
+        </div>
+        <p class="sim-note">Simulated figures — they illustrate the pattern, not Osborne Electric's real results. Each line runs from the estimate (hollow dot) to the actual cost (solid dot) for one sample job.</p>
+        <div class="charts">
+          <div class="chart-card">
+            <h3>In Dollars — Estimate $ → Actual Cost $</h3>
+            <p class="cap">X-axis: $. Red lines ran over the estimate. Green lines came in under. <span class="illus-badge js-illus-jobs" style="margin:0"></span></p>
+            <div id="chart-ft-dollars"></div>
+          </div>
+          <div class="chart-card">
+            <h3>In Time — Estimated Hrs → Actual Hrs</h3>
+            <p class="cap">X-axis: hours. The same jobs, in crew hours instead of dollars. <span class="illus-badge js-illus-jobs" style="margin:0"></span></p>
+            <div id="chart-ft-hours"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sample jobs -->
+      <section class="block" id="sec-jobs">
+        <div class="block-head">
+          <span class="num">09</span>
+          <h2>Sample Jobs Behind the Numbers</h2>
+          <span class="takeaway" id="take-jobs"></span>
+        </div>
+        <p class="jobs-winrate-line" id="jobs-winrate"></p>
+        <p class="sim-note">Generic invented job labels for illustration only — no real bids, projects, or outcomes. Select a row to highlight it in sections 05–06.</p>
+        <div class="table-scroll">
+          <table id="jobs-table">
+            <thead>
+              <tr>
+                <th>Job (sample)</th>
+                <th>Type</th>
+                <th>AI-prepared brief</th>
+                <th class="num">Bid $</th>
+                <th class="num">Estimate $</th>
+                <th class="num">Actual cost $</th>
+                <th class="num">$ var.</th>
+                <th class="num">Est. hrs</th>
+                <th class="num">Actual hrs</th>
+                <th>Outcome</th>
+                <th class="num">Lead → award (days)</th>
+                <th class="num">Price $ (simulated)</th>
+                <th class="num">Margin $</th>
+              </tr>
+            </thead>
+            <tbody id="jobs-body"></tbody>
+            <tfoot id="jobs-foot"></tfoot>
+          </table>
+        </div>
+        <div class="lost-wrap">
+          <h3>Lost Bids — Estimates Only</h3>
+          <p class="cap">We did not win these bids, so they have no actual cost, no actual hours, no crew time, no bought materials, and no margin. They count only in the win rate and bid cost math. <span class="illus-badge" style="margin:0">Illustrative — small sample</span></p>
+          <div class="table-scroll">
+            <table id="lost-table">
+              <thead><tr><th>Job (sample)</th><th>Type</th><th>AI-prepared brief</th><th class="num">Bid $</th><th class="num">Estimate $</th><th class="num">Est. hrs</th><th class="num">Lead → decision (days)</th></tr></thead>
+              <tbody id="lost-body"></tbody>
+              <tfoot id="lost-foot"></tfoot>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 10. Pipeline -->
+      <section class="block" id="sec-pipeline">
+        <div class="block-head">
+          <span class="num">10</span>
+          <h2>Pipeline — Open Bids &amp; Crew Capacity</h2>
+          <span class="takeaway" id="take-pipeline"></span>
+        </div>
+        <p class="sim-note" id="pipeline-note"></p>
+        <div class="stat-row" id="pipeline-stats"></div>
+      </section>
+
+      <!-- 5. Accuracy consistency -->
+      <section class="block" id="sec-accuracy">
+        <div class="block-head">
+          <span class="num">07</span>
+          <h2>Accuracy &amp; Consistency</h2>
+          <span class="takeaway" id="take-accuracy"></span>
+        </div>
+        <p class="sim-note">Simulated figures — they illustrate the pattern, not Osborne Electric's actual results.</p>
+        <div class="charts">
+          <div class="chart-card">
+            <h3>Share of Estimates Landing Within ±10% of Actual</h3>
+            <p class="cap">By month, across the simulated job set. Y-axis: % within ±10%. Higher is better, and steadier is better still.</p>
+            <div id="chart-acc"></div>
+            <div class="legend" id="legend-acc"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Typical Size of the Miss (Middle Value, % of Estimate)</h3>
+            <p class="cap">Y-axis: % of estimate. How far the middle estimate landed from the actual cost each month, over or under. A narrowing line means the misses are getting smaller and steadier.</p>
+            <div id="chart-miss"></div>
+            <div class="legend" id="legend-miss"></div>
+          </div>
+        </div>
+        <div class="stat-row" id="acc-stats"></div>
+        <div id="acc-breakdowns"></div>
+      </section>
+
+      <!-- Field labor — whole division -->
+      <section class="block" id="sec-labor">
+        <div class="block-head">
+          <span class="num">01</span>
+          <h2>Field Labor — Hours on the Job</h2>
+          <span class="takeaway" id="take-labor"></span>
+        </div>
+        <p class="sim-note">Simulated figures — for presentation only. Electricians are sample names only (first name + last initial), not real employees. Jobs keep the generic invented labels used above. Every electrician hour below adds up to that job's actual hours in the sample jobs table, so the division totals add up to the same numbers.</p>
+        <div class="charts">
+          <div class="chart-card">
+            <h3>Field Hours by Week</h3>
+            <p class="cap">Y-axis: hours. Total field hours logged each week in the selected period, built from the labor rows below. Hover a week for its figure.</p>
+            <div id="chart-labor-weekly"></div>
+            <div class="legend" id="legend-labor-weekly"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Job Labor Totals — Estimated → Actual Hrs</h3>
+            <p class="cap">X-axis: hours. Hours per job: estimated labor hours (hollow dot) to actual labor hours (solid dot). Red lines ran over the estimate. Green lines came in under.</p>
+            <div id="chart-labor-ft"></div>
+          </div>
+        </div>
+        <div class="roster-panel">
+          <h3>Active Roster — Who Is on Which Job Right Now</h3>
+          <div class="roster-body" id="labor-roster"></div>
+        </div>
+        <div class="labor-subhead">Hours by electrician and job — sample names only</div>
+        <div class="labor-table-wrap table-scroll">
+          <table id="labor-table">
+            <thead>
+              <tr>
+                <th>Electrician (sample)</th>
+                <th>Job (sample)</th>
+                <th class="num">Hours on job</th>
+                <th>Date range</th>
+                <th>Status</th>
+                <th class="num">Est. labor hrs</th>
+                <th class="num">Actual hrs</th>
+                <th class="num">Variance</th>
+              </tr>
+            </thead>
+            <tbody id="labor-body"></tbody>
+            <tfoot id="labor-foot"></tfoot>
+          </table>
+        </div>
+        <div class="stat-row" id="labor-stats"></div>
+      </section>
+
+      <!-- Materials — whole division -->
+      <section class="block" id="sec-materials">
+        <div class="block-head">
+          <span class="num">02</span>
+          <h2>Materials — Bought Materials</h2>
+          <span class="takeaway" id="take-materials"></span>
+        </div>
+        <p class="sim-note">Simulated figures — for presentation only. Generic electrical categories only — no real suppliers, brands, or vendors. Materials are one component of each job's cost: every job's actual material cost below sits under that job's actual cost total in the sample jobs table, and division totals are sums of the material rows, never typed separately.</p>
+        <div class="charts">
+          <div class="chart-card">
+            <h3>Material Spend by Category</h3>
+            <p class="cap">X-axis: $. Actual bought-material spend per generic category in the selected period; the grey tick is that category's estimated spend. Hover a bar for its figures.</p>
+            <div id="chart-mat-cats"></div>
+            <div class="legend" id="legend-mat-cats"></div>
+          </div>
+          <div class="chart-card">
+            <h3>Material Spend Over Time</h3>
+            <p class="cap">Y-axis: $. Bought-material spend by month — actual cost vs. estimate — summed from the per-job rows below. Hover a month for its figures.</p>
+            <div id="chart-mat-time"></div>
+            <div class="legend" id="legend-mat-time"></div>
+          </div>
+        </div>
+        <div class="mat-subhead">Materials by job — generic categories only</div>
+        <div class="mat-table-wrap table-scroll">
+          <table id="materials-table">
+            <thead>
+              <tr>
+                <th>Job (sample)</th>
+                <th>Materials bought</th>
+                <th class="num">Est. material $</th>
+                <th class="num">Actual material $</th>
+                <th class="num">Variance</th>
+                <th class="num">Share of job actual cost</th>
+              </tr>
+            </thead>
+            <tbody id="materials-body"></tbody>
+            <tfoot id="materials-foot"></tfoot>
+          </table>
+        </div>
+        <div class="stat-row" id="materials-stats"></div>
+      </section>
+
+      <div class="how-to-read card" id="how-to-read">
+        <div class="block-head card-toggle" role="button" tabindex="0" aria-expanded="false" aria-controls="how-to-read-detail"><h2>How to Read This</h2><span class="expand-label">Expand</span><span class="chev" aria-hidden="true">▾</span></div>
+        <div class="card-detail" id="how-to-read-detail" hidden>
+        <p>One-line definitions for the main measures. All figures are simulated and worked out on this page from the rows above. Dates show as Mon YYYY (e.g., Nov 2025). Units are $, hrs, and % throughout. Percentages use one decimal.</p>
+        <dl class="defs">
+          <div><dt>Win Rate</dt><dd>The share of bids we won in the selected period.</dd></div>
+          <div><dt>Cost per Bid</dt><dd>What we spend, on average, to prepare and submit one bid, shown with AI help and by hand.</dd></div>
+          <div><dt>Hours Returned</dt><dd>Office hours the AI tool gives back in the period, from finding work, intake and AI-prepared briefs, and paperwork.</dd></div>
+          <div><dt>Estimate Accuracy (Won Jobs)</dt><dd>The share of won jobs whose actual cost landed within ±10% of the estimate.</dd></div>
+          <div><dt>Field Hours</dt><dd>Electrician hours logged on jobs in the period. The hours for each job add up to that job's actual hours.</dd></div>
+          <div><dt>Material Spend</dt><dd>The actual cost of materials bought for jobs in the period, with the estimate shown next to it.</dd></div>
+          <div><dt>Average Miss</dt><dd>How far actual cost landed from the estimate, on average, across won jobs. Negative means the estimate was too high.</dd></div>
+          <div><dt>Price &amp; Margin (Simulated)</dt><dd>Price is a simulated field: the estimate marked up by a set simulated percentage. Margin is price minus actual cost, for won jobs only.</dd></div>
+          <div><dt>Win Rate for the Jobs Shown Here</dt><dd>Won jobs divided by all the sample jobs in the tables, by count and by estimated dollars. It differs from the overall Win Rate above, which counts every bid in the period.</dd></div>
+          <div><dt>AI-Prepared Brief</dt><dd>A short job summary the AI tool prepares before we bid. Jobs with one are compared with jobs without one.</dd></div>
+        </dl>
+        </div>
+      </div>
+      <footer>
+        <span class="sim-badge">Simulated data — for presentation only</span>
+        <p>Simulated data — for presentation only. No figure here is a real Osborne Electric result.</p>
+      </footer>
+    </div>
+
+    <script>
+      "use strict";
+      /* ================================================================
+         SIMULATED DATASET — the single source for every number shown.
+         Monthly rows: Nov 2025 – Oct 2026.
+         ret*  = hours the agent returns that month, by task
+         manualHrs = hours the same tasks took by hand (baseline)
+         estDays / waitDays = avg days from opportunity to bid submitted
+         costAgent / costManual = avg dollars spent per pursuit
+         accShare = % of that month's estimates within ±10% of actual
+         missMed  = median miss, % of estimate
+         ================================================================ */
+      var MONTHS = [
+        { name: "Nov 2025", opps: 18, bids: 9,  wins: 3, retFind: 26, retIntake: 34, retPaper: 22, manualHrs: 205, estDays: 6.2, waitDays: 11.5, costAgent: 1180, costManual: 1640, accShare: 64, missMed: 10.8 },
+        { name: "Dec 2025", opps: 21, bids: 11, wins: 4, retFind: 30, retIntake: 38, retPaper: 24, manualHrs: 228, estDays: 5.8, waitDays: 12.8, costAgent: 1120, costManual: 1590, accShare: 68, missMed: 10.1 },
+        { name: "Jan 2026", opps: 19, bids: 10, wins: 3, retFind: 28, retIntake: 36, retPaper: 23, manualHrs: 214, estDays: 6.0, waitDays: 11.9, costAgent: 1150, costManual: 1620, accShare: 66, missMed: 10.4 },
+        { name: "Feb 2026", opps: 24, bids: 12, wins: 4, retFind: 34, retIntake: 42, retPaper: 27, manualHrs: 246, estDays: 5.5, waitDays: 13.4, costAgent: 1060, costManual: 1560, accShare: 71, missMed: 9.2 },
+        { name: "Mar 2026", opps: 26, bids: 13, wins: 5, retFind: 36, retIntake: 45, retPaper: 29, manualHrs: 262, estDays: 5.2, waitDays: 14.1, costAgent: 1010, costManual: 1520, accShare: 74, missMed: 8.6 },
+        { name: "Apr 2026", opps: 23, bids: 12, wins: 4, retFind: 33, retIntake: 41, retPaper: 26, manualHrs: 240, estDays: 5.4, waitDays: 12.6, costAgent: 1040, costManual: 1540, accShare: 72, missMed: 8.9 },
+        { name: "May 2026", opps: 28, bids: 14, wins: 5, retFind: 39, retIntake: 48, retPaper: 31, manualHrs: 278, estDays: 5.0, waitDays: 13.8, costAgent: 980,  costManual: 1490, accShare: 77, missMed: 7.8 },
+        { name: "Jun 2026", opps: 27, bids: 13, wins: 5, retFind: 38, retIntake: 46, retPaper: 30, manualHrs: 268, estDays: 4.9, waitDays: 14.5, costAgent: 960,  costManual: 1470, accShare: 79, missMed: 7.3 },
+        { name: "Jul 2026", opps: 31, bids: 15, wins: 6, retFind: 42, retIntake: 51, retPaper: 33, manualHrs: 296, estDays: 4.7, waitDays: 13.2, costAgent: 930,  costManual: 1440, accShare: 81, missMed: 6.9 },
+        { name: "Aug 2026", opps: 29, bids: 14, wins: 5, retFind: 40, retIntake: 49, retPaper: 31, manualHrs: 284, estDays: 4.8, waitDays: 14.8, costAgent: 950,  costManual: 1460, accShare: 80, missMed: 7.1 },
+        { name: "Sep 2026", opps: 33, bids: 16, wins: 6, retFind: 44, retIntake: 53, retPaper: 34, manualHrs: 308, estDays: 4.5, waitDays: 13.9, costAgent: 910,  costManual: 1420, accShare: 84, missMed: 6.2 },
+        { name: "Oct 2026", opps: 30, bids: 15, wins: 5, retFind: 42, retIntake: 50, retPaper: 32, manualHrs: 294, estDays: 4.4, waitDays: 14.2, costAgent: 890,  costManual: 1400, accShare: 85, missMed: 5.8 }
+      ];
+
+      /* Sample jobs — generic invented labels only. month = index into MONTHS.
+         REVISION (Step 1): the sample is now split. JOBS holds WON jobs only,
+         with actuals. LOST_BIDS holds the pursuits that were not won — estimates
+         only: no actual dollars, no actual hours, no crew time, no materials,
+         no margin. ALL_JOBS = JOBS + LOST_BIDS is the full 14-job sample used
+         for win-rate math. Status check: every one of the 14 source jobs carried
+         an explicit won true/false — NO job had an unclear status, so none is
+         flagged here.
+         PRICE RULE (Step 9, simulated): each won job gets a simulated price
+         field below — price = estD marked up by a job-specific simulated
+         percentage, markup = 15% + (id mod 4) x 3% (so 15%, 18%, 21% or 24%).
+         margin = price - actD (won jobs only). Both fields are simulated. */
+      var JOBS = [
+        { id: 1,  name: "School lighting retrofit", short: "School lighting",      type: "electrical",  month: 1,  brief: true,  pursuit: 2400, estD: 184000, actD: 176500, estH: 620,  actH: 588,  won: true,  days: 21 },
+        { id: 2,  name: "Pump station motor control center", short: "Motor control center",              type: "new-construction",  month: 2,  brief: false, pursuit: 3100, estD: 96000,  actD: 101200, estH: 340,  actH: 372,  won: true,  days: 34 },
+        { id: 3,  name: "Warehouse panel upgrade", short: "Warehouse panels",       type: "electrical",  month: 3,  brief: true,  pursuit: 1500, estD: 58000,  actD: 55900,  estH: 210,  actH: 198,  won: true,  days: 18 },
+        { id: 4,  name: "Office structured cabling", short: "Office cabling",     type: "new-construction", month: 4,  brief: true,  pursuit: 900,  estD: 32000,  actD: 31400,  estH: 150,  actH: 144,  won: true,  days: 14 },
+        { id: 7,  name: "Switchgear repair (service)", short: "Switchgear repair",   type: "service",     month: 6,  brief: true,  pursuit: 450,  estD: 14500,  actD: 13900,  estH: 64,   actH: 59,   won: true,  days: 6 },
+        { id: 10, name: "School intercom & clocks", short: "Intercom & clocks",      type: "low-voltage", month: 8,  brief: true,  pursuit: 700,  estD: 21000,  actD: 20400,  estH: 96,   actH: 91,   won: true,  days: 12 },
+        { id: 11, name: "Water plant variable frequency drive install", short: "Water plant drive",       type: "new-construction",  month: 8,  brief: true,  pursuit: 2900, estD: 132000, actD: 127800, estH: 470,  actH: 449,  won: true,  days: 26 },
+        { id: 12, name: "Generator automatic transfer switch swap (service)", short: "Generator switch swap",  type: "service",     month: 9,  brief: false, pursuit: 600,  estD: 17800,  actD: 18600,  estH: 78,   actH: 84,   won: true,  days: 8 },
+        { id: 14, name: "Fire alarm device refresh", short: "Fire alarm refresh",     type: "low-voltage", month: 11, brief: true,  pursuit: 1100, estD: 36000,  actD: 34900,  estH: 168,  actH: 159,  won: true,  days: 15 }
+      ];
+      /* Lost bids — estimates only. actD/actH intentionally absent (not zero):
+         a lost bid spent pursuit dollars but never ran, so it has no actuals. */
+      var LOST_BIDS = [
+        { id: 5,  name: "Plant motor controls", short: "Plant motor controls",          type: "electrical",  month: 5,  brief: false, pursuit: 6800, estD: 240000, estH: 880,  won: false, days: 47 },
+        { id: 6,  name: "Clinic nurse-call system", short: "Nurse-call system",      type: "low-voltage", month: 5,  brief: true,  pursuit: 800,  estD: 27000,  estH: 120,  won: false, days: 16 },
+        { id: 8,  name: "Parking lot lighting (service)", short: "Parking lot lighting",type: "service",     month: 6,  brief: false, pursuit: 500,  estD: 9800,   estH: 42,   won: false, days: 9 },
+        { id: 9,  name: "Substation controls upgrade", short: "Substation controls",   type: "electrical",  month: 7,  brief: false, pursuit: 8400, estD: 310000, estH: 1150, won: false, days: 52 },
+        { id: 13, name: "Distribution center fit-out", short: "DC fit-out",   type: "new-construction",  month: 10, brief: true,  pursuit: 5900, estD: 205000, estH: 760,  won: false, days: 41 }
+      ];
+      var ALL_JOBS = JOBS.concat(LOST_BIDS);
+      /* Simulated price + margin fields (see PRICE RULE above). */
+      JOBS.forEach(function (j) {
+        j.markup = 0.15 + (j.id % 4) * 0.03;
+        j.price = Math.round(j.estD * (1 + j.markup));
+        j.margin = j.price - j.actD;
+      });
+      /* Pipeline (Step 11): MONTHS tracks bids and wins but NOT losses, so open
+         bids = bids - wins - losses cannot be derived from the arrays. The open
+         count below is therefore an ASSUMED SIMULATED INPUT, labeled as such
+         wherever it appears. Crew capacity uses 12 electricians (the distinct
+         sample names in LABOR) x 40 hrs/week x weeks in period — an assumption,
+         not data. Simulated KPI targets (Step 12) are placeholders for
+         management to replace; no targets exist in the source data. */
+      var PIPELINE_OPEN_ASSUMED = 22;
+      var KPI_TARGETS = { winRate: 40, fieldHours: 2500, matSpend: 250000, accuracy: 90 };
+
+      /* Field labor — sample names only (first name + last initial).
+         REVISION (Step 1): rows for lost bids (jobs 5, 6, 8, 9, 13) were
+         REMOVED — a lost bid has no crew time. LABOR now covers won jobs only.
+         STRICT RECONCILIATION: for each job, the sum of `hrs` across its
+         rows equals that job's actH in JOBS, and the sum of `estHrs`
+         equals that job's estH. Division totals are sums of these rows. */
+      var JOB_DATES = {
+        1: "Dec 1 – Dec 19, 2025", 2: "Jan 5 – Jan 23, 2026", 3: "Feb 2 – Feb 13, 2026",
+        4: "Mar 2 – Mar 13, 2026", 5: "Apr 6 – Apr 24, 2026", 6: "Apr 13 – Apr 24, 2026",
+        7: "May 4 – May 8, 2026", 8: "May 11 – May 15, 2026", 9: "Jun 1 – Jun 26, 2026",
+        10: "Jul 6 – Jul 17, 2026", 11: "Jul 13 – Jul 31, 2026", 12: "Aug 3 – Aug 14, 2026",
+        13: "Sep 7 – Sep 25, 2026", 14: "Oct 5 – Oct 16, 2026"
+      };
+      var JOB_STATUS = { 13: "active", 14: "active" };
+      function jobStatus(id) { return JOB_STATUS[id] || "complete"; }
+      var LABOR = [
+        { jobId: 1, name: "Mike R.", hrs: 212, estHrs: 224 }, { jobId: 1, name: "James T.", hrs: 198, estHrs: 208 }, { jobId: 1, name: "David L.", hrs: 178, estHrs: 188 },
+        { jobId: 2, name: "Chris P.", hrs: 148, estHrs: 135 }, { jobId: 2, name: "Brian K.", hrs: 124, estHrs: 113 }, { jobId: 2, name: "Tony S.", hrs: 100, estHrs: 92 },
+        { jobId: 3, name: "Kevin M.", hrs: 102, estHrs: 108 }, { jobId: 3, name: "Ryan D.", hrs: 96, estHrs: 102 },
+        { jobId: 4, name: "Josh H.", hrs: 78, estHrs: 82 }, { jobId: 4, name: "Mark W.", hrs: 66, estHrs: 68 },
+        { jobId: 7, name: "Brian K.", hrs: 32, estHrs: 35 }, { jobId: 7, name: "Tony S.", hrs: 27, estHrs: 29 },
+        { jobId: 10, name: "Ryan D.", hrs: 48, estHrs: 51 }, { jobId: 10, name: "Mark W.", hrs: 43, estHrs: 45 },
+        { jobId: 11, name: "David L.", hrs: 158, estHrs: 165 }, { jobId: 11, name: "Chris P.", hrs: 150, estHrs: 157 }, { jobId: 11, name: "Brian K.", hrs: 141, estHrs: 148 },
+        { jobId: 12, name: "Tony S.", hrs: 44, estHrs: 41 }, { jobId: 12, name: "Kevin M.", hrs: 40, estHrs: 37 },
+        { jobId: 14, name: "Mark W.", hrs: 84, estHrs: 89 }, { jobId: 14, name: "Ryan D.", hrs: 75, estHrs: 79 }
+      ];
+      function jobById(id) { for (var i = 0; i < JOBS.length; i++) if (JOBS[i].id === id) return JOBS[i]; return null; }
+      function filteredLabor() {
+        var jobs = filteredJobs(true);
+        var ids = {};
+        jobs.forEach(function (j) { ids[j.id] = true; });
+        return LABOR.filter(function (r) { return !!ids[r.jobId]; });
+      }
+      /* Weekly series derived from the labor rows via their jobs:
+         each job's actual hours are spread across the 4 weeks of its
+         month with fixed weights, remainder to the last week, so the
+         weekly totals sum exactly to the filtered jobs' actual hours. */
+      function weeklySeries() {
+        var idx = periodMonths();
+        var weeks = [];
+        idx.forEach(function (mi) {
+          var mon = MONTHS[mi].name.split(" ")[0];
+          for (var w = 0; w < 4; w++) weeks.push({ label: mon + " W" + (w + 1), full: MONTHS[mi].name + " · Week " + (w + 1), hours: 0 });
+        });
+        var weights = [0.30, 0.28, 0.24, 0.18];
+        filteredJobs(true).forEach(function (j) {
+          var pos = idx.indexOf(j.month);
+          if (pos === -1) return;
+          var base = pos * 4, used = 0;
+          for (var w = 0; w < 4; w++) {
+            var h = w === 3 ? j.actH - used : Math.round(j.actH * weights[w]);
+            weeks[base + w].hours += h; used += h;
+          }
+        });
+        return weeks;
+      }
+
+      /* Bought materials — generic categories only, no suppliers/brands.
+         REVISION (Step 1): rows for lost bids (jobs 5, 6, 8, 9, 13) were
+         REMOVED — a lost bid bought no materials. MATERIALS covers won jobs only.
+         STRICT RECONCILIATION: for each job, the sum of `act` across its
+         category rows is that job's actual material cost and is LESS than
+         that job's actD in JOBS (materials are one component of job cost);
+         the sum of `est` is its estimated material cost, also under estD.
+         Division totals are sums of these rows, never typed separately. */
+      var MAT_CATS = [
+        { key: "wire", label: "Wire & cable" },
+        { key: "conduit", label: "Conduit & fittings" },
+        { key: "panels", label: "Panels & breakers" },
+        { key: "lighting", label: "Lighting fixtures" },
+        { key: "devices", label: "Devices & controls" },
+        { key: "misc", label: "Miscellaneous" }
+      ];
+      function matCatLabel(key) { for (var i = 0; i < MAT_CATS.length; i++) if (MAT_CATS[i].key === key) return MAT_CATS[i].label; return key; }
+      var MATERIALS = [
+        { jobId: 1, cat: "lighting", act: 34200, est: 35600 }, { jobId: 1, cat: "wire", act: 15400, est: 16200 }, { jobId: 1, cat: "devices", act: 9800, est: 10200 }, { jobId: 1, cat: "conduit", act: 5200, est: 5400 }, { jobId: 1, cat: "misc", act: 3800, est: 3800 },
+        { jobId: 2, cat: "panels", act: 16800, est: 15800 }, { jobId: 2, cat: "wire", act: 9400, est: 8800 }, { jobId: 2, cat: "conduit", act: 6800, est: 6400 }, { jobId: 2, cat: "devices", act: 5900, est: 5500 },
+        { jobId: 3, cat: "panels", act: 11200, est: 11800 }, { jobId: 3, cat: "wire", act: 5600, est: 5900 }, { jobId: 3, cat: "conduit", act: 3900, est: 4100 }, { jobId: 3, cat: "misc", act: 2000, est: 2000 },
+        { jobId: 4, cat: "wire", act: 6400, est: 6600 }, { jobId: 4, cat: "devices", act: 3400, est: 3500 }, { jobId: 4, cat: "conduit", act: 1150, est: 1200 }, { jobId: 4, cat: "misc", act: 900, est: 900 },
+        { jobId: 7, cat: "panels", act: 2650, est: 2850 }, { jobId: 7, cat: "devices", act: 1200, est: 1300 }, { jobId: 7, cat: "misc", act: 1000, est: 1050 },
+        { jobId: 10, cat: "devices", act: 3720, est: 3900 }, { jobId: 10, cat: "wire", act: 2500, est: 2650 }, { jobId: 10, cat: "misc", act: 1200, est: 1250 },
+        { jobId: 11, cat: "panels", act: 17900, est: 18600 }, { jobId: 11, cat: "wire", act: 12400, est: 12900 }, { jobId: 11, cat: "conduit", act: 9200, est: 9600 }, { jobId: 11, cat: "devices", act: 6800, est: 7000 },
+        { jobId: 12, cat: "panels", act: 3840, est: 3600 }, { jobId: 12, cat: "wire", act: 1900, est: 1800 }, { jobId: 12, cat: "misc", act: 1200, est: 1100 },
+        { jobId: 14, cat: "devices", act: 6280, est: 6650 }, { jobId: 14, cat: "wire", act: 3900, est: 4150 }, { jobId: 14, cat: "misc", act: 2000, est: 2100 }
+      ];
+      function filteredMaterials() {
+        var jobs = filteredJobs(true);
+        var ids = {};
+        jobs.forEach(function (j) { ids[j.id] = true; });
+        return MATERIALS.filter(function (r) { return !!ids[r.jobId]; });
+      }
+      function materialsByJob() {
+        var rows = filteredMaterials();
+        return filteredJobs(true).map(function (j) {
+          var jr = rows.filter(function (r) { return r.jobId === j.id; });
+          var cats = jr.slice().sort(function (a, b) { return b.act - a.act; });
+          return { job: j, rows: cats, act: sum(jr, function (r) { return r.act; }), est: sum(jr, function (r) { return r.est; }) };
+        }).filter(function (x) { return x.rows.length > 0; });
+      }
+      function materialsByCategory() {
+        var rows = filteredMaterials();
+        return MAT_CATS.map(function (c) {
+          var cr = rows.filter(function (r) { return r.cat === c.key; });
+          return { key: c.key, label: c.label, act: sum(cr, function (r) { return r.act; }), est: sum(cr, function (r) { return r.est; }) };
+        }).filter(function (x) { return x.act > 0 || x.est > 0; }).sort(function (a, b) { return b.act - a.act; });
+      }
+      function materialsMonthly() {
+        var rows = filteredMaterials();
+        return filteredMonths().map(function (m, i) {
+          var idx = periodMonths()[i];
+          var mr = rows.filter(function (r) { var j = jobById(r.jobId); return j && j.month === idx; });
+          return { name: m.name, act: sum(mr, function (r) { return r.act; }), est: sum(mr, function (r) { return r.est; }) };
+        });
+      }
+
+      /* ---------- helpers ---------- */
+      function sum(arr, f) { return arr.reduce(function (t, x) { return t + f(x); }, 0); }
+      function avg(arr, f) { return arr.length ? sum(arr, f) / arr.length : 0; }
+      function money(n) { return "$" + Math.round(n).toLocaleString("en-US"); }
+      function moneyK(n) { return n >= 1000 ? "$" + (Math.round(n / 100) / 10).toLocaleString("en-US") + "K" : money(n); }
+      function pct(n, d) { return ((100 * n) / d).toFixed(1) + "%"; }
+      function pct1(v) { return v.toFixed(1) + "%"; }
+      function varPct(j) { return ((j.actD - j.estD) / j.estD) * 100; }
+      function $(id) { return document.getElementById(id); }
+
+      var state = { period: "all", wtype: "all", selectedJob: null };
+
+      function periodMonths() {
+        if (state.period === "all") return MONTHS.map(function (_, i) { return i; });
+        var start = { q1: 0, q2: 3, q3: 6, q4: 9 }[state.period];
+        return [start, start + 1, start + 2];
+      }
+      function filteredMonths() { return periodMonths().map(function (i) { return MONTHS[i]; }); }
+      function filteredSample(forCharts) {
+        var idx = periodMonths();
+        return ALL_JOBS.filter(function (j) {
+          if (idx.indexOf(j.month) === -1) return false;
+          if (forCharts && state.wtype !== "all" && j.type !== state.wtype) return false;
+          return true;
+        });
+      }
+      function filteredLost() {
+        var idx = periodMonths();
+        return LOST_BIDS.filter(function (j) {
+          if (idx.indexOf(j.month) === -1) return false;
+          if (state.wtype !== "all" && j.type !== state.wtype) return false;
+          return true;
+        });
+      }
+      function signedPct(v) { return (v >= 0 ? "+" : "\u2212") + Math.abs(v).toFixed(1) + "%"; }
+      function avgErr(arr) { return arr.length ? avg(arr, function (j) { return varPct(j); }) : null; }
+      function nPlain(n) { return n + (n === 1 ? " job" : " jobs"); }
+      function shortMonth(name) { var parts = name.split(" "); return parts[0] + " '" + (parts[1] ? parts[1].slice(2) : ""); }
+      function tickSet(n) { var st = {}; if (n <= 6) { for (var i = 0; i < n; i++) st[i] = true; } else { st[0] = true; st[n - 1] = true; for (var k = 3; k < n - 1; k += 3) st[k] = true; } return st; }
+      function xTickLabel(x, y, i, n, name) {
+        if (!tickSet(n)[i]) return "";
+        var anchor = i === 0 ? "start" : (i === n - 1 ? "end" : "middle");
+        return '<text x="' + x + '" y="' + y + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif" text-anchor="' + anchor + '">' + shortMonth(name) + "</text>";
+      }
+      function winRates(sample) {
+        var won = sample.filter(function (j) { return j.won; });
+        var estAll = sum(sample, function (j) { return j.estD; });
+        var estWon = sum(won, function (j) { return j.estD; });
+        return { won: won.length, total: sample.length, byCount: sample.length ? won.length / sample.length : null, byDollars: estAll ? estWon / estAll : null, estWon: estWon, estAll: estAll };
+      }
+      function pursuitPerWin(sample) {
+        /* Derivation (Step 8): the arrays carry pursuit $ per job, not by size
+           in MONTHS, so cost per win = total pursuit $ spent on ALL sample jobs
+           in the size group (won + lost) divided by wins in that group. */
+        function group(pred) {
+          var g = sample.filter(pred);
+          var w = g.filter(function (j) { return j.won; }).length;
+          var spend = sum(g, function (j) { return j.pursuit; });
+          return { spend: spend, wins: w, n: g.length, perWin: w ? spend / w : null };
+        }
+        return { small: group(function (j) { return j.estD < 100000; }), large: group(function (j) { return j.estD >= 100000; }) };
+      }
+      function filteredJobs(forCharts) {
+        var idx = periodMonths();
+        return JOBS.filter(function (j) {
+          if (idx.indexOf(j.month) === -1) return false;
+          if (forCharts && state.wtype !== "all" && j.type !== state.wtype) return false;
+          return true;
+        });
+      }
+
+      /* ================================================================
+         SVG chart builders (hand-drawn scales; bars start at zero)
+         ================================================================ */
+      var C = { ink: "#212529", muted: "#3d444b", faint: "#5a6268", line: "#e9ecef", orange: "#007bff", neg: "#dc3545", panel: "#ffffff" };
+      var SHADES = ["#007bff", "#6c757d", "#343a40"]; // stacked segments: blue / grey / dark
+
+      function svgOpen(w, h) { return '<svg viewBox="0 0 ' + w + " " + h + '" role="img" aria-hidden="true">'; }
+      function gridY(x0, x1, y, label) {
+        return '<line x1="' + x0 + '" x2="' + x1 + '" y1="' + y + '" y2="' + y + '" stroke="' + C.line + '" stroke-width="1"/>' +
+          '<text x="' + (x0 - 8) + '" y="' + (y + 4) + '" fill="' + C.faint + '" font-size="11" font-family="Inter, system-ui, sans-serif" text-anchor="end">' + label + "</text>";
+      }
+      function niceCeil(v, step) { return Math.ceil(v / step) * step; }
+
+      function tipDot(c) { return "<span class='dot' style='background:" + c + "'></span>"; }
+
+      /* Stacked-area time series (3 returned-task series) + manual baseline line */
+      function chartHours(rows) {
+        var W = 520, H = 300, x0 = 44, x1 = W - 8, y0 = 16, y1 = H - 34;
+        var maxV = niceCeil(Math.max.apply(null, rows.map(function (r) { return Math.max(r.manualHrs, r.retFind + r.retIntake + r.retPaper); })), 100);
+        function X(i) { return rows.length === 1 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (i / (rows.length - 1)); }
+        function Y(v) { return y1 - (v / maxV) * (y1 - y0); }
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, Math.round(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 5) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">hrs</text>';
+        var keys = ["retFind", "retIntake", "retPaper"];
+        var base = rows.map(function () { return 0; });
+        keys.forEach(function (k, ki) {
+          var top = rows.map(function (r, i) { return base[i] + r[k]; });
+          var ptsTop = top.map(function (v, i) { return X(i) + "," + Y(v); }).join(" ");
+          var ptsBase = base.map(function (v, i) { return X(i) + "," + Y(v); }).reverse().join(" ");
+          s += '<polygon points="' + ptsTop + " " + ptsBase + '" fill="' + SHADES[ki] + '" fill-opacity="' + (ki === 0 ? 0.5 : 0.72) + '"/>';
+          s += '<polyline points="' + ptsTop + '" fill="none" stroke="' + SHADES[ki] + '" stroke-width="1.5"/>';
+          base = top;
+        });
+        var pts = rows.map(function (r, i) { return X(i) + "," + Y(r.manualHrs); }).join(" ");
+        s += '<polyline points="' + pts + '" fill="none" stroke="#6c757d" stroke-width="2.5"/>';
+        rows.forEach(function (r, i) {
+          s += '<circle cx="' + X(i) + '" cy="' + Y(r.manualHrs) + '" r="3" fill="#6c757d"/>';
+          s += xTickLabel(X(i), y1 + 20, i, rows.length, r.name);
+          var zx0 = i === 0 ? x0 : (X(i - 1) + X(i)) / 2;
+          var zx1 = i === rows.length - 1 ? x1 : (X(i) + X(i + 1)) / 2;
+          var tot = r.retFind + r.retIntake + r.retPaper;
+          var tip = "<b>" + r.name + "</b><br>" +
+            tipDot(SHADES[0]) + "Finding work — " + r.retFind + " hrs<br>" +
+            tipDot(SHADES[1]) + "Intake &amp; AI-prepared briefs — " + r.retIntake + " hrs<br>" +
+            tipDot(SHADES[2]) + "Paperwork — " + r.retPaper + " hrs<br>" +
+            "<b>Total returned — " + tot + " hrs</b><br>" +
+            tipDot("#6c757d") + "Same work by hand — " + r.manualHrs + " hrs";
+          s += '<rect class="hz" data-tip="' + tip + '" x="' + zx0 + '" y="' + y0 + '" width="' + (zx1 - zx0) + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* Time series: average cost per pursuit, agent vs manual */
+      function chartCostTime(rows) {
+        var W = 520, H = 300, x0 = 56, x1 = W - 8, y0 = 16, y1 = H - 34;
+        var maxV = niceCeil(Math.max.apply(null, rows.map(function (r) { return r.costManual; })), 500);
+        function X(i) { return rows.length === 1 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (i / (rows.length - 1)); }
+        function Y(v) { return y1 - (v / maxV) * (y1 - y0); }
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, moneyK(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 5) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">$ per bid</text>';
+        var ptsA = rows.map(function (r, i) { return X(i) + "," + Y(r.costAgent); }).join(" ");
+        var ptsM = rows.map(function (r, i) { return X(i) + "," + Y(r.costManual); }).join(" ");
+        s += '<polygon points="' + X(0) + "," + y1 + " " + ptsA + " " + X(rows.length - 1) + "," + y1 + '" fill="' + C.orange + '" fill-opacity="0.13"/>';
+        s += '<polyline points="' + ptsM + '" fill="none" stroke="#6c757d" stroke-width="2"/>';
+        s += '<polyline points="' + ptsA + '" fill="none" stroke="' + C.orange + '" stroke-width="2.5"/>';
+        rows.forEach(function (r, i) {
+          s += '<circle cx="' + X(i) + '" cy="' + Y(r.costManual) + '" r="3" fill="#6c757d"/>';
+          s += '<circle cx="' + X(i) + '" cy="' + Y(r.costAgent) + '" r="3" fill="' + C.orange + '"/>';
+          s += xTickLabel(X(i), y1 + 20, i, rows.length, r.name);
+          var zx0 = i === 0 ? x0 : (X(i - 1) + X(i)) / 2;
+          var zx1 = i === rows.length - 1 ? x1 : (X(i) + X(i + 1)) / 2;
+          var tip = "<b>" + r.name + "</b><br>" +
+            tipDot(C.orange) + "AI-assisted — " + money(r.costAgent) + " per bid<br>" +
+            tipDot("#6c757d") + "Done by hand — " + money(r.costManual) + " per bid<br>" +
+            "<b>" + ((1 - r.costAgent / r.costManual) * 100).toFixed(1) + "% lower with AI help</b>";
+          s += '<rect class="hz" data-tip="' + tip + '" x="' + zx0 + '" y="' + y0 + '" width="' + (zx1 - zx0) + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* Compact multi-series sparkline for stat panels and card summaries */
+      function sparkLines(list, W, H, opts) {
+        opts = opts || {};
+        var all = [];
+        list.forEach(function (sr) { all = all.concat(sr.values); });
+        var max = Math.max.apply(null, all.concat([1]));
+        var padL = opts.padL || 34, padR = 6, padT = opts.unit ? 17 : 8, padB = 16;
+        var plotW = W - padL - padR, plotH = H - padT - padB;
+        function fmtAxis(v) { var core = v >= 1000 ? (Math.round(v / 100) / 10).toLocaleString("en-US") + "K" : (v % 1 ? String(Math.round(v * 10) / 10) : String(Math.round(v))); return (opts.prefix || "") + core + (opts.suffix || ""); }
+        function X(i, n) { return padL + plotW * (n === 1 ? 0.5 : i / (n - 1)); }
+        function Y(v) { return padT + plotH - (v / max) * plotH; }
+        var out = '<svg viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">';
+        [0, 0.5, 1].forEach(function (f) {
+          var gy = Y(max * f);
+          out += '<line x1="' + padL + '" x2="' + (W - padR) + '" y1="' + gy + '" y2="' + gy + '" stroke="#e9ecef" stroke-width="1"/>';
+          out += '<text x="' + (padL - 4) + '" y="' + (gy + 3) + '" fill="#6c757d" font-size="8.5" font-family="Inter, system-ui, sans-serif" text-anchor="end">' + fmtAxis(max * f) + "</text>";
+        });
+        var months = [];
+        try { months = filteredMonths(); } catch (e) { months = []; }
+        if (opts.unit) out += '<text x="' + padL + '" y="9" fill="#6c757d" font-size="8.5" font-family="Inter, system-ui, sans-serif" text-anchor="start">' + opts.unit + "</text>";
+        if (months.length) {
+          var n = months[0] && list[0] ? list[0].values.length : months.length;
+          var tickIdx = {};
+          tickIdx[0] = true; tickIdx[months.length - 1] = true;
+          for (var qi = 0; qi < months.length; qi += 3) tickIdx[qi] = true;
+          var tickList = Object.keys(tickIdx).map(function (k) { return +k; }).sort(function (a, b) { return a - b; });
+          if (tickList.length > 2 && months.length > 1) {
+            var prevTick = tickList[tickList.length - 2];
+            var pxPerStep = plotW / (months.length - 1);
+            if ((months.length - 1 - prevTick) * pxPerStep < 54) delete tickIdx[prevTick];
+          }
+          Object.keys(tickIdx).forEach(function (ks) {
+            var i2 = +ks;
+            var mx = X(i2, months.length);
+            var anchor = i2 === 0 ? "start" : (i2 === months.length - 1 ? "end" : "middle");
+            out += '<text x="' + mx + '" y="' + (H - 3) + '" fill="#6c757d" font-size="8" font-family="Inter, system-ui, sans-serif" text-anchor="' + anchor + '">' + shortMonth(months[i2].name) + "</text>";
+          });
+        }
+        list.forEach(function (sr) {
+          var pts = sr.values.map(function (v, i) { return X(i, sr.values.length) + "," + Y(v); }).join(" ");
+          if (sr.fill) out += '<polygon points="' + padL + "," + (padT + plotH) + " " + pts + " " + (W - padR) + "," + (padT + plotH) + '" fill="' + sr.color + '" opacity="0.14"/>';
+          out += '<polyline points="' + pts + '" fill="none" stroke="' + sr.color + '" stroke-width="2"/>';
+          out += '<circle cx="' + X(sr.values.length - 1, sr.values.length) + '" cy="' + Y(sr.values[sr.values.length - 1]) + '" r="3" fill="' + sr.color + '"/>';
+        });
+        return out + "</svg>";
+      }
+
+      /* Mini from–to dumbbells for the overview cards */
+      function miniDumbbells(jobs, kind) {
+        if (!jobs.length) return '<p class="mini-cap">No sample jobs in this selection.</p>';
+        var top = jobs.slice(0, 4);
+        var W = 360, rowH = 22, H = top.length * rowH + 2, x0 = 172, x1 = W - 54;
+        var max = 0;
+        top.forEach(function (j) {
+          max = Math.max(max, kind === "D" ? j.estD : j.estH, kind === "D" ? j.actD : j.actH);
+        });
+        function X(v) { return x0 + (v / max) * (x1 - x0); }
+        var s = '<svg viewBox="0 0 ' + W + " " + H + '" aria-hidden="true">';
+        top.forEach(function (j, i) {
+          var y = 11 + rowH * i;
+          var e = kind === "D" ? j.estD : j.estH, a = kind === "D" ? j.actD : j.actH;
+          var over = a > e, col = over ? C.neg : "#28a745";
+          var lab = j.short || j.name;
+          s += '<text x="' + (x0 - 8) + '" y="' + (y + 3.5) + '" fill="' + C.muted + '" font-size="10.5" font-family="Inter, system-ui, sans-serif" text-anchor="end">' + lab + "</text>";
+          s += '<line x1="' + X(e) + '" x2="' + X(a) + '" y1="' + y + '" y2="' + y + '" stroke="' + col + '" stroke-width="2.5"/>';
+          s += '<circle cx="' + X(e) + '" cy="' + y + '" r="3.5" fill="' + C.panel + '" stroke="' + col + '" stroke-width="1.8"/>';
+          s += '<circle cx="' + X(a) + '" cy="' + y + '" r="3.5" fill="' + col + '"/>';
+          s += '<text x="' + (x1 + 6) + '" y="' + (y + 3.5) + '" fill="' + (over ? C.neg : C.muted) + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">' + (over ? "+" : "−") + Math.abs(((a - e) / e) * 100).toFixed(1) + "%</text>";
+        });
+        return s + "</svg>";
+      }
+
+      /* Stacked bars, 2 segments (estimating vs waiting days) */
+      function chartCycle(rows) {
+        var W = 520, H = 300, x0 = 44, x1 = W - 8, y0 = 16, y1 = H - 34;
+        var maxV = niceCeil(Math.max.apply(null, rows.map(function (r) { return r.estDays + r.waitDays; })), 5);
+        var bw = (x1 - x0) / rows.length;
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, Math.round(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 5) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">days</text>';
+        rows.forEach(function (r, i) {
+          var cx = x0 + bw * i, w = Math.min(26, bw * 0.55), bx = cx + (bw - w) / 2;
+          var hE = (r.estDays / maxV) * (y1 - y0), hW = (r.waitDays / maxV) * (y1 - y0);
+          s += '<rect x="' + bx + '" y="' + (y1 - hE) + '" width="' + w + '" height="' + hE + '" fill="' + C.ink + '"/>';
+          s += '<rect x="' + bx + '" y="' + (y1 - hE - hW) + '" width="' + w + '" height="' + hW + '" fill="' + C.orange + '"/>';
+          s += '<text x="' + (cx + bw / 2) + '" y="' + (y1 - hE - hW - 6) + '" fill="' + C.ink + '" font-size="11" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + (r.estDays + r.waitDays).toFixed(0) + "</text>";
+          var tipC = "<b>" + r.name + "</b><br>" + tipDot(C.ink) + "Estimating — " + r.estDays.toFixed(1) + " days<br>" + tipDot(C.orange) + "Waiting on others — " + r.waitDays.toFixed(1) + " days<br><b>Total — " + (r.estDays + r.waitDays).toFixed(1) + " days</b>";
+          s += '<rect class="hz" data-tip="' + tipC + '" x="' + cx + '" y="' + y0 + '" width="' + bw + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+          s += xTickLabel(cx + bw / 2, y1 + 20, i, rows.length, r.name);
+        });
+        return s + "</svg>";
+      }
+
+      /* Grouped bars: metrics x {agent, manual} */
+      function chartCost(metrics) {
+        var W = 560, H = 300, x0 = 68, x1 = W - 8, y0 = 26, y1 = H - 34;
+        var maxV = niceCeil(Math.max.apply(null, metrics.map(function (m) { return Math.max(m.agent, m.manual); })), 1000);
+        var gw = (x1 - x0) / metrics.length;
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, moneyK(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 12) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">$</text>';
+        metrics.forEach(function (m, i) {
+          var cx = x0 + gw * i, w = Math.min(34, gw * 0.3);
+          var hA = (m.agent / maxV) * (y1 - y0), hM = (m.manual / maxV) * (y1 - y0);
+          s += '<rect x="' + (cx + gw / 2 - w - 3) + '" y="' + (y1 - hA) + '" width="' + w + '" height="' + hA + '" fill="' + C.orange + '"/>';
+          s += '<rect x="' + (cx + gw / 2 + 3) + '" y="' + (y1 - hM) + '" width="' + w + '" height="' + hM + '" fill="' + SHADES[1] + '"/>';
+          s += '<text x="' + (cx + gw / 2 - w / 2 - 3) + '" y="' + (y1 - hA - 6) + '" fill="' + C.ink + '" font-size="11.5" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + money(m.agent) + "</text>";
+          s += '<text x="' + (cx + gw / 2 + w / 2 + 3) + '" y="' + (y1 - hM - 6) + '" fill="' + C.muted + '" font-size="11.5" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + money(m.manual) + "</text>";
+          s += '<text x="' + (cx + gw / 2) + '" y="' + (y1 + 20) + '" fill="' + C.muted + '" font-size="12" text-anchor="middle">' + m.label + "</text>";
+          var tipM = "<b>" + m.label + "</b><br>" + tipDot(C.orange) + "AI-assisted — " + money(m.agent) + "<br>" + tipDot(SHADES[1]) + "Done by hand — " + money(m.manual);
+          s += '<rect class="hz" data-tip="' + tipM + '" x="' + cx + '" y="' + y0 + '" width="' + gw + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* Dumbbell from-to chart for jobs; kind = "D" dollars | "H" hours */
+      function chartFromTo(jobs, kind) {
+        var rowH = 34, W = 580, H = Math.max(120, jobs.length * rowH + 54), x0 = 178, x1 = W - 62, yTop = 14, yBot = H - 30;
+        if (!jobs.length) return '<p style="color:var(--muted)">No sample jobs in this selection.</p>';
+        var vals = [];
+        jobs.forEach(function (j) { vals.push(kind === "D" ? j.estD : j.estH, kind === "D" ? j.actD : j.actH); });
+        var maxV = niceCeil(Math.max.apply(null, vals), kind === "D" ? 50000 : 250);
+        var minV = 0;
+        function X(v) { return x0 + ((v - minV) / (maxV - minV)) * (x1 - x0); }
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) {
+          var gx = x0 + (x1 - x0) * (g / 4), gv = minV + (maxV - minV) * (g / 4);
+          s += '<line x1="' + gx + '" x2="' + gx + '" y1="' + yTop + '" y2="' + yBot + '" stroke="' + C.line + '"/>' +
+            '<text x="' + gx + '" y="' + (yBot + 20) + '" fill="' + C.faint + '" font-size="11" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + (kind === "D" ? moneyK(gv) : gv) + "</text>";
+        }
+        jobs.forEach(function (j, i) {
+          var y = yTop + rowH * i + rowH / 2;
+          var e = kind === "D" ? j.estD : j.estH, a = kind === "D" ? j.actD : j.actH;
+          var over = a > e, sel = state.selectedJob === j.id;
+          var col = over ? C.neg : (sel ? C.orange : "#28a745");
+          var label = j.short || j.name;
+          s += (sel ? '<rect x="2" y="' + (y - rowH / 2 + 3) + '" width="' + (W - 4) + '" height="' + (rowH - 6) + '" rx="5" fill="rgba(0,123,255,0.12)"/>' : "") +
+            '<text x="' + (x0 - 10) + '" y="' + (y + 4) + '" fill="' + (sel ? C.ink : C.muted) + '" font-size="11.5" text-anchor="end">' + label + "</text>" +
+            '<line x1="' + X(e) + '" x2="' + X(a) + '" y1="' + y + '" y2="' + y + '" stroke="' + col + '" stroke-width="' + (sel ? 3.5 : 2.5) + '"/>' +
+            '<circle cx="' + X(e) + '" cy="' + y + '" r="4.5" fill="' + C.panel + '" stroke="' + col + '" stroke-width="2"/>' +
+            '<circle cx="' + X(a) + '" cy="' + y + '" r="4.5" fill="' + col + '"/>' +
+            '<text x="' + (x1 + 8) + '" y="' + (y + 4) + '" fill="' + (over ? C.neg : C.muted) + '" font-size="11" font-family="Inter, system-ui, sans-serif">' + (over ? "+" : "−") + Math.abs(((a - e) / e) * 100).toFixed(1) + "%</text>";
+        });
+        return s + "</svg>";
+      }
+
+      /* Time-series line chart of a % series, with area fill and hover zones */
+      function chartLine(rows, key, maxV, color, fmt, label, showAvg) {
+        var W = 520, H = 260, x0 = 44, x1 = W - 14, y0 = 18, y1 = H - 34;
+        var bw = (x1 - x0) / Math.max(1, rows.length - 1 || 1);
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, fmt(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 5) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">' + label + '</text>';
+        function X(i) { return rows.length === 1 ? (x0 + x1) / 2 : x0 + bw * i; }
+        function Y(v) { return y1 - (v / maxV) * (y1 - y0); }
+        var pts = rows.map(function (r, i) { return X(i) + "," + Y(r[key]); }).join(" ");
+        s += '<polygon points="' + X(0) + "," + y1 + " " + pts + " " + X(rows.length - 1) + "," + y1 + '" fill="' + color + '" fill-opacity="0.10"/>';
+        if (showAvg) {
+          var av = avg(rows, function (r) { return r[key]; });
+          s += '<line x1="' + x0 + '" x2="' + x1 + '" y1="' + Y(av) + '" y2="' + Y(av) + '" stroke="' + C.faint + '" stroke-width="1.5" stroke-dasharray="5 4"/>' +
+            '<text x="' + (x0 + 4) + '" y="' + (Y(av) - 6) + '" fill="' + C.faint + '" font-size="11" font-family="Inter, system-ui, sans-serif">avg ' + fmt(av) + "</text>";
+        }
+        s += '<polyline points="' + pts + '" fill="none" stroke="' + color + '" stroke-width="2.5"/>';
+        rows.forEach(function (r, i) {
+          s += '<circle cx="' + X(i) + '" cy="' + Y(r[key]) + '" r="3.5" fill="' + color + '"/>' +
+            '<text x="' + X(i) + '" y="' + (Y(r[key]) - 9) + '" fill="' + C.ink + '" font-size="11" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + fmt(r[key]) + "</text>" +
+            xTickLabel(X(i), y1 + 20, i, rows.length, r.name);
+          var zx0 = i === 0 ? x0 : (X(i - 1) + X(i)) / 2;
+          var zx1 = i === rows.length - 1 ? x1 : (X(i) + X(i + 1)) / 2;
+          var tip = "<b>" + r.name + "</b><br>" + tipDot(color) + label + " — " + fmt(r[key]);
+          s += '<rect class="hz" data-tip="' + tip + '" x="' + zx0 + '" y="' + y0 + '" width="' + (zx1 - zx0) + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* Time-series: field hours by week (single series, area fill) */
+      function chartLaborWeekly(weeks) {
+        var W = 520, H = 300, x0 = 44, x1 = W - 8, y0 = 16, y1 = H - 34;
+        var maxV = niceCeil(Math.max.apply(null, weeks.map(function (w) { return w.hours; }).concat([40])), 50);
+        function X(i) { return weeks.length === 1 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (i / (weeks.length - 1)); }
+        function Y(v) { return y1 - (v / maxV) * (y1 - y0); }
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, Math.round(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 5) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">hrs</text>';
+        if (!weeks.length) return '<p style="color:var(--muted)">No field hours in this selection.</p>';
+        var pts = weeks.map(function (w, i) { return X(i) + "," + Y(w.hours); }).join(" ");
+        s += '<polygon points="' + X(0) + "," + y1 + " " + pts + " " + X(weeks.length - 1) + "," + y1 + '" fill="' + C.orange + '" fill-opacity="0.13"/>';
+        s += '<polyline points="' + pts + '" fill="none" stroke="' + C.orange + '" stroke-width="2.5"/>';
+        var step = weeks.length > 16 ? 4 : (weeks.length > 8 ? 2 : 1);
+        weeks.forEach(function (w, i) {
+          s += '<circle cx="' + X(i) + '" cy="' + Y(w.hours) + '" r="3" fill="' + C.orange + '"/>';
+          if (i % step === 0 || i === weeks.length - 1) s += '<text x="' + X(i) + '" y="' + (y1 + 20) + '" fill="' + C.faint + '" font-size="9.5" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + w.label + "</text>";
+          var zx0 = i === 0 ? x0 : (X(i - 1) + X(i)) / 2;
+          var zx1 = i === weeks.length - 1 ? x1 : (X(i) + X(i + 1)) / 2;
+          var tip = "<b>" + w.full + "</b><br>" + tipDot(C.orange) + "Field hours — " + w.hours.toLocaleString("en-US") + " hrs";
+          s += '<rect class="hz" data-tip="' + tip + '" x="' + zx0 + '" y="' + y0 + '" width="' + Math.max(6, zx1 - zx0) + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* Horizontal bars: material spend by category (actual bar, est tick) */
+      function chartMatCats(cats) {
+        if (!cats.length) return '<p style="color:var(--muted);padding:0 14px">No materials in this selection.</p>';
+        var rowH = 40, W = 560, H = cats.length * rowH + 44, x0 = 158, x1 = W - 62, yTop = 10, yBot = H - 28;
+        var maxV = niceCeil(Math.max.apply(null, cats.map(function (c) { return Math.max(c.act, c.est); })), 25000);
+        function X(v) { return x0 + (v / maxV) * (x1 - x0); }
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) {
+          var gx = x0 + (x1 - x0) * (g / 4), gv = maxV * g / 4;
+          s += '<line x1="' + gx + '" x2="' + gx + '" y1="' + yTop + '" y2="' + yBot + '" stroke="' + C.line + '"/>' +
+            '<text x="' + gx + '" y="' + (yBot + 20) + '" fill="' + C.faint + '" font-size="11" font-family="Inter, system-ui, sans-serif" text-anchor="middle">' + moneyK(gv) + "</text>";
+        }
+        cats.forEach(function (c, i) {
+          var y = yTop + rowH * i + rowH / 2;
+          var over = c.act > c.est, col = over ? C.neg : C.orange;
+          s += '<text x="' + (x0 - 10) + '" y="' + (y + 4) + '" fill="' + C.muted + '" font-size="11.5" text-anchor="end">' + c.label + "</text>" +
+            '<rect x="' + x0 + '" y="' + (y - 8) + '" width="' + Math.max(2, X(c.act) - x0) + '" height="16" fill="' + col + '"/>' +
+            '<line x1="' + X(c.est) + '" x2="' + X(c.est) + '" y1="' + (y - 12) + '" y2="' + (y + 12) + '" stroke="#6c757d" stroke-width="2.5"/>' +
+            '<text x="' + (x1 + 8) + '" y="' + (y + 4) + '" fill="' + C.ink + '" font-size="11" font-family="Inter, system-ui, sans-serif">' + moneyK(c.act) + "</text>";
+          var tip = "<b>" + c.label + "</b><br>" + tipDot(col) + "Actual — " + money(c.act) + "<br>" + tipDot("#6c757d") + "Estimated — " + money(c.est);
+          s += '<rect class="hz" data-tip="' + tip + '" x="' + x0 + '" y="' + (y - rowH / 2 + 4) + '" width="' + (x1 - x0) + '" height="' + (rowH - 8) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* Time series: material spend by month, actual vs estimated */
+      function chartMatTime(rows) {
+        var W = 520, H = 300, x0 = 56, x1 = W - 8, y0 = 16, y1 = H - 34;
+        var maxV = niceCeil(Math.max.apply(null, rows.map(function (r) { return Math.max(r.act, r.est); }).concat([10000])), 25000);
+        function X(i) { return rows.length === 1 ? (x0 + x1) / 2 : x0 + (x1 - x0) * (i / (rows.length - 1)); }
+        function Y(v) { return y1 - (v / maxV) * (y1 - y0); }
+        var s = svgOpen(W, H);
+        for (var g = 0; g <= 4; g++) { var gy = y1 - (y1 - y0) * (g / 4); s += gridY(x0, x1, gy, moneyK(maxV * g / 4)); }
+        s += '<text x="' + x0 + '" y="' + (y0 - 5) + '" fill="' + C.faint + '" font-size="10.5" font-family="Inter, system-ui, sans-serif">$</text>';
+        var ptsA = rows.map(function (r, i) { return X(i) + "," + Y(r.act); }).join(" ");
+        var ptsE = rows.map(function (r, i) { return X(i) + "," + Y(r.est); }).join(" ");
+        s += '<polygon points="' + X(0) + "," + y1 + " " + ptsA + " " + X(rows.length - 1) + "," + y1 + '" fill="' + C.orange + '" fill-opacity="0.13"/>';
+        s += '<polyline points="' + ptsE + '" fill="none" stroke="#6c757d" stroke-width="2"/>';
+        s += '<polyline points="' + ptsA + '" fill="none" stroke="' + C.orange + '" stroke-width="2.5"/>';
+        rows.forEach(function (r, i) {
+          s += '<circle cx="' + X(i) + '" cy="' + Y(r.est) + '" r="3" fill="#6c757d"/>';
+          s += '<circle cx="' + X(i) + '" cy="' + Y(r.act) + '" r="3" fill="' + C.orange + '"/>';
+          s += xTickLabel(X(i), y1 + 20, i, rows.length, r.name);
+          var zx0 = i === 0 ? x0 : (X(i - 1) + X(i)) / 2;
+          var zx1 = i === rows.length - 1 ? x1 : (X(i) + X(i + 1)) / 2;
+          var tip = "<b>" + r.name + "</b><br>" + tipDot(C.orange) + "Actual material spend — " + money(r.act) + "<br>" + tipDot("#6c757d") + "Estimated material spend — " + money(r.est);
+          s += '<rect class="hz" data-tip="' + tip + '" x="' + zx0 + '" y="' + y0 + '" width="' + (zx1 - zx0) + '" height="' + (y1 - y0) + '" fill="#ffffff" fill-opacity="0"/>';
+        });
+        return s + "</svg>";
+      }
+
+      /* ================================================================
+         Rendering
+         ================================================================ */
+      function aggregates(rows) {
+        var opps = sum(rows, function (r) { return r.opps; });
+        var bids = sum(rows, function (r) { return r.bids; });
+        var wins = sum(rows, function (r) { return r.wins; });
+        var spendA = sum(rows, function (r) { return r.opps * r.costAgent; });
+        var spendM = sum(rows, function (r) { return r.opps * r.costManual; });
+        return { opps: opps, bids: bids, wins: wins, spendA: spendA, spendM: spendM };
+      }
+
+      var BOX_ICONS = {
+        chart: '<svg width="72" height="72" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="4" y="12" width="4" height="8" rx="1"/><rect x="10" y="7" width="4" height="13" rx="1"/><rect x="16" y="3" width="4" height="17" rx="1"/></svg>',
+        clock: '<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 3.5" stroke-linecap="round"/></svg>',
+        box: '<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M3 8l9-5 9 5v8l-9 5-9-5z"/><path d="M3 8l9 5 9-5"/><path d="M12 13v8"/></svg>',
+        target: '<svg width="72" height="72" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/></svg>'
+      };
+      function metricsForIndices(idx) {
+        var mrows = idx.map(function (i) { return MONTHS[i]; });
+        var ag = aggregates(mrows);
+        var jobsW = JOBS.filter(function (j) { return idx.indexOf(j.month) !== -1 && (state.wtype === "all" || j.type === state.wtype); });
+        var idsW = {}; jobsW.forEach(function (j) { idsW[j.id] = true; });
+        var fh = sum(LABOR.filter(function (r) { return !!idsW[r.jobId]; }), function (r) { return r.hrs; });
+        var ms = sum(MATERIALS.filter(function (r) { return !!idsW[r.jobId]; }), function (r) { return r.act; });
+        var jobsA = JOBS.filter(function (j) { return idx.indexOf(j.month) !== -1; });
+        var wIn = jobsA.filter(function (j) { return Math.abs(varPct(j)) <= 10; }).length;
+        var retH = sum(mrows, function (r) { return r.retFind + r.retIntake + r.retPaper; });
+        return { winRate: ag.bids ? ag.wins / ag.bids : null, fieldHours: fh, matSpend: ms, accuracy: jobsA.length ? wIn / jobsA.length : null, retHours: retH };
+      }
+      function kpiDeltas() {
+        var label, curIdx, priorIdx;
+        if (state.period === "all") {
+          label = "2nd half vs 1st half"; curIdx = [6, 7, 8, 9, 10, 11]; priorIdx = [0, 1, 2, 3, 4, 5];
+        } else {
+          label = "vs prior period";
+          var cur = periodMonths(); curIdx = cur;
+          priorIdx = cur.map(function (i) { return i - 3; }).filter(function (i) { return i >= 0; });
+          if (priorIdx.length !== 3) return { label: label, none: true };
+        }
+        var curM = metricsForIndices(curIdx), priorM = metricsForIndices(priorIdx);
+        function pp(curV, priorV) { return (curV === null || priorV === null) ? null : (curV - priorV) * 100; }
+        function pc(curV, priorV) { return priorV ? ((curV - priorV) / priorV) * 100 : null; }
+        function fmtPP(v) { return v === null ? "—" : (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v).toFixed(1) + " pts"; }
+        function fmtPC(v) { return v === null ? "—" : (v > 0 ? "+" : (v < 0 ? "−" : "")) + Math.abs(v).toFixed(1) + "%"; }
+        function cls(v, favorableUp) {
+          if (v === null || Math.round(v * 10) === 0 || !favorableUp) return "neutral";
+          return v > 0 ? "fav" : "unfav";
+        }
+        var winD = pp(curM.winRate, priorM.winRate);
+        var fldD = pc(curM.fieldHours, priorM.fieldHours);
+        var matD = pc(curM.matSpend, priorM.matSpend);
+        var accD = pp(curM.accuracy, priorM.accuracy);
+        return { label: label, none: false,
+          win: { text: fmtPP(winD), cls: cls(winD, true) },
+          field: { text: fmtPC(fldD), cls: "neutral" },
+          mat: { text: fmtPC(matD), cls: "neutral" },
+          acc: { text: fmtPP(accD), cls: cls(accD, true) } };
+      }
+      function renderKPIs() {
+        var rows = filteredMonths(), a = aggregates(rows);
+        var jobs = filteredJobs(false);
+        var within = jobs.filter(function (j) { return Math.abs(varPct(j)) <= 10; }).length;
+        var hours = sum(rows, function (r) { return r.retFind + r.retIntake + r.retPaper; });
+        var fieldHours = sum(filteredLabor(), function (r) { return r.hrs; });
+        var fullWithin = JOBS.filter(function (j) { return Math.abs(varPct(j)) <= 10; }).length;
+        var accShareNow = jobs.length ? within / jobs.length : null;
+        var accBelow = accShareNow !== null && accShareNow < fullWithin / JOBS.length - 1e-9;
+        var matAct = sum(filteredMaterials(), function (r) { return r.act; });
+        var matEst = sum(filteredMaterials(), function (r) { return r.est; });
+        var d = kpiDeltas();
+        function deltaFor(key) {
+          if (key === "field") return { text: d.none ? "—" : d.field.text, cls: "neutral" };
+          if (key === "mat") return { text: d.none ? "—" : d.mat.text, cls: "neutral" };
+          if (d.none) return { text: "—", cls: "neutral" };
+          return d[key];
+        }
+        /* Won-job counts per half — same comparison windows as the half-over-half deltas:
+           for the full range, 1st half = months 0-5, 2nd half = months 6-11;
+           for a quarter, prior period vs current period. Filtered by job type like field/materials. */
+        function wonHalfCounts() {
+          var firstIdx, secondIdx, firstLab, secondLab;
+          if (state.period === "all") { firstIdx = [0, 1, 2, 3, 4, 5]; secondIdx = [6, 7, 8, 9, 10, 11]; firstLab = "1st half"; secondLab = "2nd half"; }
+          else {
+            var cur = periodMonths();
+            var prior = cur.map(function (i) { return i - 3; }).filter(function (i) { return i >= 0; });
+            if (prior.length !== 3) { var sp = Math.floor(cur.length / 2) || 1; firstIdx = cur.slice(0, sp); secondIdx = cur.slice(sp); firstLab = "1st half"; secondLab = "2nd half"; }
+            else { firstIdx = prior; secondIdx = cur; firstLab = "prior period"; secondLab = "current period"; }
+          }
+          var jobsF = JOBS.filter(function (j) { return state.wtype === "all" || j.type === state.wtype; });
+          var c1 = jobsF.filter(function (j) { return firstIdx.indexOf(j.month) !== -1; }).length;
+          var c2 = jobsF.filter(function (j) { return secondIdx.indexOf(j.month) !== -1; }).length;
+          return { first: c1, second: c2, firstLab: firstLab, secondLab: secondLab };
+        }
+        var halfC = wonHalfCounts();
+        var halfCountsText = halfC.first + " won jobs in " + halfC.firstLab + " vs " + halfC.second + " in " + halfC.secondLab;
+        var volumeContext = '<div class="kpi-context">Smaller won jobs in 2nd half.</div><div class="kpi-context-counts">' + halfCountsText + '</div>';
+        var sErrK = avgErr(jobs);
+        function tgt(txt, ok) { return '<div class="kpi-target">Simulated target: <b>' + txt + '</b> — ' + ok + '</div>'; }
+        var winPctV = a.bids ? (a.wins / a.bids) * 100 : null;
+        var accPctV = jobs.length ? (within / jobs.length) * 100 : null;
+        var boxes = [
+          { cls: "bg-neutral", icon: BOX_ICONS.chart, label: "Win rate", value: a.bids ? pct(a.wins, a.bids) : "—", delta: deltaFor("win"),
+            basis: "Win rate: the share of bids we won. " + a.wins + " won of " + a.bids + " bids submitted (all bids in the period, simulated months). The jobs shown here have a different rate — see the note under these tiles.",
+            targetLine: tgt(KPI_TARGETS.winRate.toFixed(1) + "%", winPctV === null ? "no bids in view" : (winPctV >= KPI_TARGETS.winRate ? "met" : "not met")), target: "sec-jobs" },
+          { cls: "bg-neutral", icon: BOX_ICONS.clock, label: "Field hours", value: fieldHours.toLocaleString("en-US") + '<span class="unit">hrs</span>', delta: deltaFor("field"),
+            basis: "Field hours: electrician hours logged on won jobs · " + hours.toLocaleString("en-US") + " hrs the AI tool gave back in the period",
+            extra: volumeContext,
+            targetLine: tgt(KPI_TARGETS.fieldHours.toLocaleString("en-US") + " hrs", fieldHours >= KPI_TARGETS.fieldHours ? "met" : "not met"), target: "sec-labor" },
+          { cls: "bg-neutral", icon: BOX_ICONS.box, label: "Material spend", value: money(matAct), delta: deltaFor("mat"),
+            basis: "Material spend: bought materials on won jobs in the period · estimated " + money(matEst),
+            extra: volumeContext,
+            targetLine: tgt(money(KPI_TARGETS.matSpend) + " budget", matAct <= KPI_TARGETS.matSpend ? "within budget" : "over budget"), target: "sec-materials" },
+          { cls: "bg-neutral", icon: BOX_ICONS.target, label: "Estimate accuracy (won jobs)", value: jobs.length ? (within + " of " + jobs.length) : "—", delta: deltaFor("acc"),
+            secondary: jobs.length ? '<div class="kpi-secondary">' + pct(within, jobs.length) + '</div><div class="kpi-sublabel">won jobs within ±10%</div>' : "",
+            basis: sErrK !== null ? "Average miss " + signedPct(sErrK) + " (negative = estimate was too high), across won jobs" : "No won jobs in view",
+            targetLine: tgt(KPI_TARGETS.accuracy.toFixed(1) + "% within ±10%", accPctV === null ? "no jobs in view" : (accPctV >= KPI_TARGETS.accuracy ? "met" : "not met")), target: "sec-accuracy" }
+        ];
+        $("kpis").innerHTML = boxes.map(function (b) {
+          return '<div class="small-box ' + b.cls + '"><div class="inner"><h3>' + b.value + '</h3><p>' + b.label + '</p>' + (b.secondary || "") + '<div class="kpi-delta ' + b.delta.cls + '">' + b.delta.text + ' <span class="delta-lab">' + d.label + '</span></div><div class="basis">' + b.basis + '</div>' + (b.extra || "") + (b.targetLine || "") + '</div><div class="icon" aria-hidden="true">' + b.icon + '</div><button class="small-box-footer" type="button" data-target="' + b.target + '">More info →</button></div>';
+        }).join("");
+        Array.prototype.forEach.call($("kpis").querySelectorAll(".small-box-footer"), function (btn) {
+          btn.addEventListener("click", function () { flash(btn.getAttribute("data-target"), true); });
+        });
+        var sample = filteredSample(true);
+        var wr = winRates(sample);
+        var noteTxt = "All bids vs. the jobs shown here: the Win rate tile above (" + a.wins + " of " + a.bids + " = " + (a.bids ? pct(a.wins, a.bids) : "—") + ") counts all " + a.bids + " bids in the selected period. The " + sample.length + " sample jobs (" + wr.won + " won, " + (sample.length - wr.won) + " lost) are the jobs tracked in full detail in the tables below. Their own win rate is " + (wr.byCount !== null ? (wr.byCount * 100).toFixed(1) + "%" : "—") + " by count and " + (wr.byDollars !== null ? (wr.byDollars * 100).toFixed(1) + "%" : "—") + " by estimated dollars (" + nPlain(sample.length) + "). The two rates cover different sets, so they are not expected to match.";
+        var sn = $("sample-note"); if (sn) sn.textContent = noteTxt;
+      }
+
+      function renderTime() {
+        var rows = filteredMonths();
+        $("chart-hours").innerHTML = chartHours(rows);
+        $("chart-cycle").innerHTML = chartCycle(rows);
+        $("legend-hours").innerHTML =
+          '<span><span class="sw" style="background:' + SHADES[0] + '"></span>Finding work</span>' +
+          '<span><span class="sw" style="background:' + SHADES[1] + '"></span>Intake &amp; AI-prepared briefs</span>' +
+          '<span><span class="sw" style="background:' + SHADES[2] + '"></span>Paperwork</span>' +
+          '<span><span class="sw line-swatch" style="background:#6c757d"></span>Hours the same work took by hand</span>';
+        $("legend-cycle").innerHTML =
+          '<span><span class="sw" style="background:' + C.ink + '"></span>Estimating</span>' +
+          '<span><span class="sw" style="background:' + C.orange + '"></span>Waiting on others</span>';
+        var ret = sum(rows, function (r) { return r.retFind + r.retIntake + r.retPaper; });
+        var man = sum(rows, function (r) { return r.manualHrs; });
+        var cyc = avg(rows, function (r) { return r.estDays + r.waitDays; });
+        $("take-time").innerHTML = "<b>" + ret.toLocaleString("en-US") + " hrs</b> returned vs. " + man.toLocaleString("en-US") + " hrs by hand · bid out in <b>" + cyc.toFixed(1) + " days</b> on average";
+      }
+
+      function renderCost() {
+        var rows = filteredMonths(), a = aggregates(rows);
+        var metrics = [
+          { label: "Per bid", agent: a.opps ? a.spendA / a.opps : 0, manual: a.opps ? a.spendM / a.opps : 0 },
+          { label: "Per bid submitted", agent: a.bids ? a.spendA / a.bids : 0, manual: a.bids ? a.spendM / a.bids : 0 },
+          { label: "Per job won", agent: a.wins ? a.spendA / a.wins : 0, manual: a.wins ? a.spendM / a.wins : 0 }
+        ];
+        $("chart-cost-time").innerHTML = chartCostTime(rows);
+        $("legend-cost-time").innerHTML =
+          '<span><span class="sw line-swatch" style="background:' + C.orange + '"></span>AI-assisted</span>' +
+          '<span><span class="sw line-swatch" style="background:#6c757d"></span>Done by hand</span>';
+        $("chart-cost").innerHTML = chartCost(metrics);
+        $("legend-cost").innerHTML =
+          '<span><span class="sw" style="background:' + C.orange + '"></span>AI-assisted</span>' +
+          '<span><span class="sw" style="background:' + SHADES[1] + '"></span>Done by hand</span>';
+        var per = metrics[0];
+        var diff = per.manual ? ((1 - per.agent / per.manual) * 100).toFixed(1) : "0.0";
+        $("take-cost").innerHTML = "AI-assisted bids cost an average of <b>" + money(per.agent) + "</b> vs. <b>" + money(per.manual) + "</b> by hand";
+        var ppw = pursuitPerWin(filteredSample(true));
+        $("cost-stats").innerHTML = [
+          { v: money(a.spendA), k: "Total simulated bid spend with AI help, selected period" },
+          { v: money(a.spendM), k: "The same bids at the by-hand rate" },
+          { v: diff + "% lower", k: "Average cost per bid, AI-assisted vs. by hand (simulated)" },
+          { v: ppw.small.perWin !== null ? money(ppw.small.perWin) : "—", k: "Bid cost per win — small bids (estimate under $100K): total bid $ on all " + ppw.small.n + " small sample jobs ÷ " + ppw.small.wins + " wins (" + nPlain(ppw.small.n) + "). This comes from the job sample — the monthly rows do not split bid cost by size." },
+          { v: ppw.large.perWin !== null ? money(ppw.large.perWin) : "—", k: "Bid cost per win — large bids (estimate $100K+): total bid $ on all " + ppw.large.n + " large sample jobs ÷ " + ppw.large.wins + " wins (" + nPlain(ppw.large.n) + "). Big lost bids are costly — most large-bid spend sits on bids we did not win." }
+        ].map(function (s) { return '<div class="stat"><div class="v">' + s.v + '</div><div class="k">' + s.k + "</div></div>"; }).join("");
+      }
+
+      function renderFromTo() {
+        var jobs = filteredJobs(true).slice().sort(function (a, b) { return b.estD - a.estD; });
+        $("chart-ft-dollars").innerHTML = chartFromTo(jobs, "D");
+        var jobsH = filteredJobs(true).slice().sort(function (a, b) { return b.estH - a.estH; });
+        $("chart-ft-hours").innerHTML = chartFromTo(jobsH, "H");
+        var over = jobs.filter(function (j) { return j.actD > j.estD; }).length;
+        $("take-fromto").innerHTML = jobs.length ? "<b>" + over + " of " + jobs.length + "</b> won sample jobs ran over their dollar estimate" : "";
+        Array.prototype.forEach.call(document.querySelectorAll(".js-illus-jobs"), function (el) { el.textContent = "Illustrative — " + jobs.length + " won jobs · early signal, small sample"; });
+      }
+
+      function renderJobs() {
+        var jobs = filteredJobs(true);
+        var body = $("jobs-body");
+        if (!jobs.length) {
+          body.innerHTML = '<tr class="empty-row"><td colspan="13">No won sample jobs match this selection.</td></tr>';
+          $("jobs-foot").innerHTML = "";
+        } else {
+          body.innerHTML = jobs.map(function (j) {
+            var v = varPct(j);
+            return '<tr data-id="' + j.id + '"' + (state.selectedJob === j.id ? ' class="selected"' : "") + ">" +
+              '<td data-k="Job">' + j.name + '</td><td data-k="Type" style="text-align:left">' + j.type + "</td>" +
+              '<td data-k="AI-prepared brief" style="text-align:left">' + (j.brief ? '<span class="pill brief">AI brief</span>' : '<span class="pill nobrief">No AI brief</span>') + "</td>" +
+              '<td data-k="Bid $" class="num">' + money(j.pursuit) + '</td><td data-k="Estimate $" class="num">' + money(j.estD) + '</td><td data-k="Actual cost $" class="num">' + money(j.actD) + "</td>" +
+              '<td data-k="$ var." class="num' + (v > 0 ? " var-over" : "") + '">' + signedPct(v) + "</td>" +
+              '<td data-k="Est. hrs" class="num">' + j.estH.toLocaleString("en-US") + '</td><td data-k="Actual hrs" class="num">' + j.actH.toLocaleString("en-US") + "</td>" +
+              '<td data-k="Outcome" style="text-align:left"><span class="pill won">Won</span></td>' +
+              '<td data-k="Lead \u2192 award" class="num">' + j.days + " days</td>" +
+              '<td data-k="Price $ (simulated)" class="num">' + money(j.price) + '</td>' +
+              '<td data-k="Margin $" class="num">' + money(j.margin) + "</td></tr>";
+          }).join("");
+          var tEst = sum(jobs, function (j) { return j.estD; }), tAct = sum(jobs, function (j) { return j.actD; });
+          var tPrice = sum(jobs, function (j) { return j.price; }), tMargin = sum(jobs, function (j) { return j.margin; });
+          $("jobs-foot").innerHTML = "<tr><td>Shown: " + jobs.length + " won jobs</td><td></td><td></td>" +
+            '<td class="num">' + money(sum(jobs, function (j) { return j.pursuit; })) + '</td>' +
+            '<td class="num">' + money(tEst) + '</td><td class="num">' + money(tAct) + "</td>" +
+            '<td class="num">' + signedPct(((tAct - tEst) / tEst) * 100) + "</td>" +
+            '<td class="num">' + sum(jobs, function (j) { return j.estH; }).toLocaleString("en-US") + '</td>' +
+            '<td class="num">' + sum(jobs, function (j) { return j.actH; }).toLocaleString("en-US") + "</td>" +
+            "<td>" + jobs.length + " won</td>" +
+            '<td class="num">avg ' + Math.round(avg(jobs, function (j) { return j.days; })) + " days</td>" +
+            '<td class="num">' + money(tPrice) + '</td><td class="num">' + money(tMargin) + "</td></tr>";
+        }
+        var sample = filteredSample(true);
+        var wr = winRates(sample);
+        var tMarginAll = sum(jobs, function (j) { return j.margin; });
+        var tPriceAll = sum(jobs, function (j) { return j.price; });
+        $("take-jobs").innerHTML = jobs.length ? "<b>" + jobs.length + "</b> won jobs · margin <b>" + money(tMarginAll) + "</b> (" + (tPriceAll ? (tMarginAll / tPriceAll * 100).toFixed(1) : "0.0") + "%)" : "";
+        var jwEl = $("jobs-winrate");
+        if (jwEl) jwEl.textContent = wr.byCount !== null ? "Win rate for the jobs shown here: " + (wr.byCount * 100).toFixed(1) + "% by count / " + (wr.byDollars * 100).toFixed(1) + "% by estimated $" : "Win rate for the jobs shown here: —";
+        Array.prototype.forEach.call(body.querySelectorAll("tr[data-id]"), function (tr) {
+          tr.addEventListener("click", function () {
+            var id = +tr.getAttribute("data-id");
+            state.selectedJob = state.selectedJob === id ? null : id;
+            renderJobs(); renderFromTo(); renderLabor(); renderMaterials();
+            if (state.selectedJob) { flash("sec-fromto", false); expandCard("sec-fromto-hours"); }
+          });
+        });
+        /* Lost bids — estimates only, no actuals / margin */
+        var lost = filteredLost();
+        var lb = $("lost-body");
+        if (lb) {
+          if (!lost.length) {
+            lb.innerHTML = '<tr class="empty-row"><td colspan="7">No lost bids match this selection.</td></tr>';
+            $("lost-foot").innerHTML = "";
+          } else {
+            lb.innerHTML = lost.map(function (j) {
+              return "<tr>" + '<td data-k="Job">' + j.name + '</td><td data-k="Type" style="text-align:left">' + j.type + "</td>" +
+                '<td data-k="AI-prepared brief" style="text-align:left">' + (j.brief ? '<span class="pill brief">AI brief</span>' : '<span class="pill nobrief">No AI brief</span>') + "</td>" +
+                '<td data-k="Bid $" class="num">' + money(j.pursuit) + '</td><td data-k="Estimate $" class="num">' + money(j.estD) + '</td>' +
+                '<td data-k="Est. hrs" class="num">' + j.estH.toLocaleString("en-US") + '</td>' +
+                '<td data-k="Lead \u2192 decision" class="num">' + j.days + " days</td></tr>";
+            }).join("");
+            $("lost-foot").innerHTML = "<tr><td>Shown: " + lost.length + " lost bids</td><td></td><td></td>" +
+              '<td class="num">' + money(sum(lost, function (j) { return j.pursuit; })) + '</td>' +
+              '<td class="num">' + money(sum(lost, function (j) { return j.estD; })) + '</td>' +
+              '<td class="num">' + sum(lost, function (j) { return j.estH; }).toLocaleString("en-US") + "</td><td></td></tr>";
+          }
+        }
+      }
+
+      function renderLabor() {
+        var rows = filteredLabor();
+        var jobs = filteredJobs(true);
+        var total = sum(rows, function (r) { return r.hrs; });
+        var totalEst = sum(rows, function (r) { return r.estHrs; });
+        var people = {};
+        rows.forEach(function (r) { people[r.name] = true; });
+        var peopleCount = Object.keys(people).length;
+        var jobCount = jobs.length;
+        var avgPerJob = jobCount ? total / jobCount : 0;
+        var byJob = jobs.map(function (j) {
+          var jr = rows.filter(function (r) { return r.jobId === j.id; });
+          return { job: j, hrs: sum(jr, function (r) { return r.hrs; }), est: sum(jr, function (r) { return r.estHrs; }), crew: jr.length };
+        }).sort(function (a, b) { return b.hrs - a.hrs; });
+        var top = byJob[0];
+        var take = $("take-labor");
+        if (take) take.innerHTML = rows.length ? "<b>" + total.toLocaleString("en-US") + " hrs</b> · " + peopleCount + " electricians · " + jobCount + " jobs" : "No field hours in this selection";
+        /* weekly chart */
+        var weeks = weeklySeries();
+        var cw = $("chart-labor-weekly"); if (cw) cw.innerHTML = chartLaborWeekly(weeks);
+        var lw = $("legend-labor-weekly"); if (lw) lw.innerHTML = '<span><span class="sw line-swatch" style="background:' + C.orange + '"></span>Field hours per week</span><span>Total — ' + total.toLocaleString("en-US") + ' hrs (ties to the labor rows below)</span>';
+        /* job labor totals from-to (hours) */
+        var cft = $("chart-labor-ft");
+        if (cft) cft.innerHTML = chartFromTo(jobs.slice().sort(function (a, b) { return b.estH - a.estH; }), "H");
+        /* roster: active jobs in the current filter */
+        var roster = $("labor-roster");
+        if (roster) {
+          var activeJobs = jobs.filter(function (j) { return jobStatus(j.id) === "active"; });
+          if (!activeJobs.length) {
+            roster.innerHTML = '<p style="margin:0;color:var(--muted);font-size:13px">No active jobs in this selection — every job in view is complete. Widen the time range or work type to see the current roster.</p>';
+          } else {
+            roster.innerHTML = activeJobs.map(function (j) {
+              var jr = rows.filter(function (r) { return r.jobId === j.id; });
+              var jTotal = sum(jr, function (r) { return r.hrs; });
+              return '<div class="roster-job"><div class="roster-job-head"><span class="roster-job-name">' + j.name + '</span><span class="roster-job-meta">' + JOB_DATES[j.id] + ' · ' + jTotal.toLocaleString("en-US") + ' hrs logged · est. ' + j.estH.toLocaleString("en-US") + ' hrs</span></div><div class="roster-people">' +
+                jr.map(function (r) { return '<span class="roster-chip"><b>' + r.name + '</b><span>' + r.hrs + ' hrs on job</span></span>'; }).join("") + "</div></div>";
+            }).join("") + '<p style="margin:10px 0 0;color:var(--faint);font-size:12px">Sample names only — not real employees. Roster shows jobs with status “active” in the current filter.</p>';
+          }
+        }
+        /* per-electrician-per-job table */
+        var body = $("labor-body");
+        if (body) {
+          var sorted = rows.slice().sort(function (a, b) { return a.jobId - b.jobId || b.hrs - a.hrs; });
+          if (!sorted.length) {
+            body.innerHTML = '<tr class="empty-row"><td colspan="8">No labor rows match this selection.</td></tr>';
+            $("labor-foot").innerHTML = "";
+          } else {
+            body.innerHTML = sorted.map(function (r) {
+              var j = jobById(r.jobId);
+              var v = r.estHrs ? ((r.hrs - r.estHrs) / r.estHrs) * 100 : 0;
+              var st = jobStatus(r.jobId);
+              return '<tr data-id="' + r.jobId + '"' + (state.selectedJob === r.jobId ? ' class="selected"' : "") + ">" +
+                '<td data-k="Electrician">' + r.name + '</td>' +
+                '<td data-k="Job" style="text-align:left">' + (j ? j.name : "") + '</td>' +
+                '<td data-k="Hours on job" class="num">' + r.hrs.toLocaleString("en-US") + '</td>' +
+                '<td data-k="Date range" style="text-align:left;white-space:normal">' + JOB_DATES[r.jobId] + '</td>' +
+                '<td data-k="Status" style="text-align:left"><span class="pill ' + st + '">' + (st === "active" ? "Active" : "Complete") + "</span></td>" +
+                '<td data-k="Est. labor hrs" class="num">' + r.estHrs.toLocaleString("en-US") + '</td>' +
+                '<td data-k="Actual hrs" class="num">' + r.hrs.toLocaleString("en-US") + '</td>' +
+                '<td data-k="Variance" class="num' + (v > 0 ? " var-over" : "") + '">' + (v > 0 ? "+" : "−") + Math.abs(v).toFixed(1) + "%</td></tr>";
+            }).join("");
+            var tv = totalEst ? ((total - totalEst) / totalEst) * 100 : 0;
+            $("labor-foot").innerHTML = "<tr><td>Shown: " + sorted.length + " assignments</td><td></td>" +
+              '<td class="num">' + total.toLocaleString("en-US") + "</td><td></td><td></td>" +
+              '<td class="num">' + totalEst.toLocaleString("en-US") + '</td><td class="num">' + total.toLocaleString("en-US") + "</td>" +
+              '<td class="num">' + (tv >= 0 ? "+" : "−") + Math.abs(tv).toFixed(1) + "%</td></tr>";
+          }
+          Array.prototype.forEach.call(body.querySelectorAll("tr[data-id]"), function (tr) {
+            tr.addEventListener("click", function () {
+              var id = +tr.getAttribute("data-id");
+              state.selectedJob = state.selectedJob === id ? null : id;
+              renderJobs(); renderFromTo(); renderLabor(); renderMaterials();
+              if (state.selectedJob) { expandCard("sec-fromto"); expandCard("sec-fromto-hours"); flash("sec-fromto", false); }
+            });
+          });
+        }
+        var stats = $("labor-stats");
+        if (stats) stats.innerHTML = [
+          { v: total.toLocaleString("en-US") + " hrs", k: "Total field hours in the selected period — sum of the labor rows above, equal to the actual hours of the jobs in view" },
+          { v: peopleCount + " electricians", k: "Distinct sample electricians with hours in the selected period, across " + rows.length + " assignments" },
+          { v: top ? top.job.name : "—", k: top ? "Job with the most hours — " + top.hrs.toLocaleString("en-US") + " of " + total.toLocaleString("en-US") + " hrs (" + top.crew + " electricians)" : "No jobs in view" }
+        ].map(function (s) { return '<div class="stat"><div class="v" style="font-size:' + (s.v.length > 14 ? "17px" : "24px") + '">' + s.v + '</div><div class="k">' + s.k + "</div></div>"; }).join("");
+        /* overview summary (kept in sync by syncSummaries calling this) */
+        var grid = $("labor-summary");
+        if (grid) grid.innerHTML =
+          '<div class="labor-mini-stat"><div class="lv">' + total.toLocaleString("en-US") + ' hrs</div><div class="lk">Total field hours</div></div>' +
+          '<div class="labor-mini-stat"><div class="lv">' + peopleCount + '</div><div class="lk">Electricians active</div></div>' +
+          '<div class="labor-mini-stat"><div class="lv">' + jobCount + '</div><div class="lk">Jobs active in period</div></div>' +
+          '<div class="labor-mini-stat"><div class="lv">' + (jobCount ? Math.round(avgPerJob).toLocaleString("en-US") + ' hrs' : "—") + '</div><div class="lk">Average hours per job</div></div>' +
+          '<div class="labor-mini-stat wide"><div class="lk">Most hours on one job</div><div class="lv">' + (top ? top.job.name + " — " + top.hrs.toLocaleString("en-US") + " hrs" : "—") + "</div></div>";
+        var spark = $("spark-labor");
+        if (spark) spark.innerHTML = sparkLines([{ values: weeks.map(function (w) { return w.hours; }), color: C.orange, fill: true }], 300, 78, { unit: "hrs", suffix: " hrs", padL: 46 });
+        var cap = $("cap-labor");
+        if (cap) cap.textContent = "Field hours by week — " + total.toLocaleString("en-US") + " hrs across " + jobCount + " jobs in this selection";
+      }
+
+      function renderMaterials() {
+        var rows = filteredMaterials();
+        var byJob = materialsByJob();
+        var cats = materialsByCategory();
+        var totalAct = sum(rows, function (r) { return r.act; });
+        var totalEst = sum(rows, function (r) { return r.est; });
+        var variance = totalEst ? ((totalAct - totalEst) / totalEst) * 100 : 0;
+        var topCat = cats[0];
+        var jobCount = byJob.length;
+        var jobsActTotal = sum(byJob, function (x) { return x.job.actD; });
+        var shareTotal = jobsActTotal ? (totalAct / jobsActTotal) * 100 : 0;
+        var take = $("take-materials");
+        if (take) take.innerHTML = rows.length ? "<b>" + money(totalAct) + "</b> bought · est. " + money(totalEst) + " · " + jobCount + " jobs" : "No materials in this selection";
+        /* category bars */
+        var cc = $("chart-mat-cats"); if (cc) cc.innerHTML = chartMatCats(cats);
+        var lc = $("legend-mat-cats");
+        if (lc) lc.innerHTML = '<span><span class="sw" style="background:' + C.orange + '"></span>Actual — under estimate</span><span><span class="sw" style="background:' + C.neg + '"></span>Actual — over estimate</span><span><span class="sw line-swatch" style="background:#6c757d"></span>Estimated</span>';
+        /* monthly time series */
+        var monthly = materialsMonthly();
+        var ct = $("chart-mat-time"); if (ct) ct.innerHTML = chartMatTime(monthly);
+        var lt = $("legend-mat-time");
+        if (lt) lt.innerHTML = '<span><span class="sw line-swatch" style="background:' + C.orange + '"></span>Actual material spend</span><span><span class="sw line-swatch" style="background:#6c757d"></span>Estimated material spend</span>';
+        /* per-job table */
+        var body = $("materials-body");
+        if (body) {
+          if (!byJob.length) {
+            body.innerHTML = '<tr class="empty-row"><td colspan="6">No materials match this selection.</td></tr>';
+            $("materials-foot").innerHTML = "";
+          } else {
+            var sorted = byJob.slice().sort(function (a, b) { return b.act - a.act; });
+            body.innerHTML = sorted.map(function (x) {
+              var v = x.est ? ((x.act - x.est) / x.est) * 100 : 0;
+              var share = x.job.actD ? (x.act / x.job.actD) * 100 : 0;
+              var catSummary = x.rows.map(function (r) { return matCatLabel(r.cat) + " " + moneyK(r.act); }).join(" · ");
+              return '<tr data-id="' + x.job.id + '"' + (state.selectedJob === x.job.id ? ' class="selected"' : "") + ">" +
+                '<td data-k="Job">' + x.job.name + '</td>' +
+                '<td data-k="Materials bought" class="mat-cats-cell">' + catSummary + '</td>' +
+                '<td data-k="Est. material $" class="num">' + money(x.est) + '</td>' +
+                '<td data-k="Actual material $" class="num">' + money(x.act) + '</td>' +
+                '<td data-k="Variance" class="num' + (v > 0 ? " var-over" : "") + '">' + (v > 0 ? "+" : "−") + Math.abs(v).toFixed(1) + "%</td>" +
+                '<td data-k="Share of job actual cost" class="num">' + share.toFixed(1) + "% of " + moneyK(x.job.actD) + "</td></tr>";
+            }).join("");
+            $("materials-foot").innerHTML = "<tr><td>Shown: " + sorted.length + " jobs</td><td></td>" +
+              '<td class="num">' + money(totalEst) + '</td><td class="num">' + money(totalAct) + "</td>" +
+              '<td class="num">' + (variance >= 0 ? "+" : "−") + Math.abs(variance).toFixed(1) + "%</td>" +
+              '<td class="num">' + shareTotal.toFixed(1) + "% of job actual cost</td></tr>";
+          }
+          Array.prototype.forEach.call(body.querySelectorAll("tr[data-id]"), function (tr) {
+            tr.addEventListener("click", function () {
+              var id = +tr.getAttribute("data-id");
+              state.selectedJob = state.selectedJob === id ? null : id;
+              renderJobs(); renderFromTo(); renderLabor(); renderMaterials();
+              if (state.selectedJob) { expandCard("sec-fromto"); expandCard("sec-fromto-hours"); flash("sec-fromto", false); }
+            });
+          });
+        }
+        var stats = $("materials-stats");
+        if (stats) stats.innerHTML = [
+          { v: money(totalAct), k: "Total bought-material spend in the selected period — sum of the material rows above" },
+          { v: money(totalEst), k: "Estimated material spend for the same jobs — actual cost ran " + (variance >= 0 ? "+" : "−") + Math.abs(variance).toFixed(1) + "% vs. estimate" },
+          { v: shareTotal.toFixed(1) + "%", k: "Materials as a share of those jobs' actual cost totals — materials are one part of job cost, always under the job total" }
+        ].map(function (s) { return '<div class="stat"><div class="v">' + s.v + '</div><div class="k">' + s.k + "</div></div>"; }).join("");
+        /* overview summary — updated here so overview and detail can never drift */
+        var grid = $("materials-summary");
+        if (grid) grid.innerHTML =
+          '<div class="mat-mini-stat"><div class="lv">' + money(totalAct) + '</div><div class="lk">Total material spend</div></div>' +
+          '<div class="mat-mini-stat"><div class="lv">' + (rows.length ? (variance >= 0 ? "+" : "−") + Math.abs(variance).toFixed(1) + "%" : "—") + '</div><div class="lk">Vs. estimated ' + money(totalEst) + '</div></div>' +
+          '<div class="mat-mini-stat"><div class="lv">' + jobCount + '</div><div class="lk">Jobs with materials in period</div></div>' +
+          '<div class="mat-mini-stat"><div class="lv">' + (rows.length ? shareTotal.toFixed(1) + "%" : "—") + '</div><div class="lk">Share of job actual cost</div></div>' +
+          '<div class="mat-mini-stat wide"><div class="lk">Top category by spend</div><div class="lv">' + (topCat ? topCat.label + " — " + money(topCat.act) : "—") + "</div></div>";
+        var spark = $("spark-mat");
+        if (spark) spark.innerHTML = sparkLines([
+          { values: monthly.map(function (m) { return m.act; }), color: C.orange, fill: true },
+          { values: monthly.map(function (m) { return m.est; }), color: "#6c757d", fill: false }
+        ], 300, 78, { unit: "$", prefix: "$", padL: 42 });
+        var cap = $("cap-mat");
+        if (cap) cap.textContent = "Material spend by month — " + money(totalAct) + " actual vs. " + money(totalEst) + " estimated in this selection";
+      }
+
+      function renderAccuracy() {
+        var rows = filteredMonths();
+        $("chart-acc").innerHTML = chartLine(rows, "accShare", 100, C.orange, function (v) { return v.toFixed(1) + "%"; }, "% within ±10%", true);
+        $("legend-acc").innerHTML =
+          '<span><span class="sw line-swatch" style="background:' + C.orange + '"></span>Estimates within ±10% of actual</span>' +
+          '<span><span class="sw line-swatch" style="background:' + C.faint + '"></span>Period average</span>';
+        $("chart-miss").innerHTML = chartLine(rows, "missMed", 15, C.orange, function (v) { return v.toFixed(1) + "%"; }, "Middle miss", false);
+        $("legend-miss").innerHTML =
+          '<span><span class="sw line-swatch" style="background:' + C.orange + '"></span>Middle miss, % of estimate</span>';
+        var first = rows[0], last = rows[rows.length - 1];
+        var trend = last.missMed < first.missMed ? "narrowed" : (last.missMed > first.missMed ? "widened" : "held steady");
+        $("take-accuracy").innerHTML = "typical miss <b>" + trend + "</b>: " + first.missMed.toFixed(1) + "% (" + first.name + ") → " + last.missMed.toFixed(1) + "% (" + last.name + ")";
+        var jobs = filteredJobs(true);
+        var within = jobs.filter(function (j) { return Math.abs(varPct(j)) <= 10; }).length;
+        var medAbs = jobs.length ? jobs.map(function (j) { return Math.abs(varPct(j)); }).sort(function (a, b) { return a - b; })[Math.floor(jobs.length / 2)] : 0;
+        var sErr = avgErr(jobs);
+        $("acc-stats").innerHTML = [
+          { v: jobs.length ? pct(within, jobs.length) : "—", k: "Won jobs with actual cost within ±10% of the estimate (" + within + " of " + jobs.length + ")" },
+          { v: sErr !== null ? signedPct(sErr) : "—", k: "Average miss — actual cost vs. estimate across won jobs (" + nPlain(jobs.length) + "). Negative means the estimate was too high on average. It sits next to the ±10% figure on purpose." },
+          { v: medAbs.toFixed(1) + "%", k: "Middle dollar miss across won jobs (" + nPlain(jobs.length) + "). Half the jobs missed by less than this, half by more." }
+        ].map(function (s) { return '<div class="stat"><div class="v">' + s.v + '</div><div class="k">' + s.k + "</div></div>"; }).join("");
+        var largeJ = jobs.filter(function (j) { return j.estD >= 100000; });
+        var smallJ = jobs.filter(function (j) { return j.estD < 100000; });
+        var eL = avgErr(largeJ), eS = avgErr(smallJ);
+        var typeNames = { "electrical": "Electrical", "new-construction": "New construction", "low-voltage": "Low-voltage", "service": "Service" };
+        var typeRows = Object.keys(typeNames).map(function (t) {
+          var tj = jobs.filter(function (j) { return j.type === t; });
+          var e = avgErr(tj);
+          return { label: typeNames[t], n: tj.length, err: e };
+        }).filter(function (x) { return x.n > 0; });
+        var bd = $("acc-breakdowns");
+        if (bd) bd.innerHTML = '<div class="acc-break">' +
+          '<div class="ab-box"><h3>Estimate Accuracy by Job Size — Average Miss <span class="illus-badge" style="margin:0">Illustrative</span></h3>' +
+          "Large jobs (est. $100K+): <b>" + (eL !== null ? signedPct(eL) : "—") + "</b> (" + nPlain(largeJ.length) + ")<br>" +
+          "Smaller jobs (est. under $100K): <b>" + (eS !== null ? signedPct(eS) : "—") + "</b> (" + nPlain(smallJ.length) + ")<br>" +
+          "The split uses estimated dollars. Won jobs only. We only see results for jobs we won, so real estimating mistakes may be bigger. Early signal, small sample.</div>" +
+          '<div class="ab-box"><h3>Average Miss by Job Type <span class="illus-badge" style="margin:0">Illustrative</span></h3>' +
+          typeRows.map(function (x) { return x.label + ": <b>" + signedPct(x.err) + "</b> (" + nPlain(x.n) + ")"; }).join("<br>") +
+          "<br>Won jobs only, for the current Job type filter. Early signal, small sample.</div></div>";
+      }
+
+      /* Insights — computed once from the FULL simulated dataset */
+      function renderInsights() {
+        var brief = ALL_JOBS.filter(function (j) { return j.brief; });
+        var nobrief = ALL_JOBS.filter(function (j) { return !j.brief; });
+        var briefWon = brief.filter(function (j) { return j.won; }).length;
+        var nobriefWon = nobrief.filter(function (j) { return j.won; }).length;
+        var wrB = briefWon / brief.length;
+        var wrN = nobriefWon / nobrief.length;
+        var small = ALL_JOBS.filter(function (j) { return j.estD < 50000; });
+        var large = ALL_JOBS.filter(function (j) { return j.estD >= 50000; });
+        var smallWon = small.filter(function (j) { return j.won; }).length;
+        var largeWon = large.filter(function (j) { return j.won; }).length;
+        var wrS = smallWon / small.length;
+        var wrL = largeWon / large.length;
+        var byCost = JOBS.slice().sort(function (a, b) { return b.pursuit - a.pursuit; });
+        var top3 = byCost.slice(0, 3), rest = byCost.slice(3);
+        var missTop = avg(top3, function (j) { return Math.abs(varPct(j)); });
+        var missRest = avg(rest, function (j) { return Math.abs(varPct(j)); });
+        var waitShare = avg(MONTHS, function (r) { return r.waitDays / (r.estDays + r.waitDays); });
+        var intakeShare = sum(MONTHS, function (r) { return r.retIntake; }) / sum(MONTHS, function (r) { return r.retFind + r.retIntake + r.retPaper; });
+        var a = aggregates(MONTHS);
+        var costDrop = (1 - (a.spendA / a.opps) / (a.spendM / a.opps)) * 100;
+
+        var totalRet = sum(MONTHS, function (r) { return r.retFind + r.retIntake + r.retPaper; });
+        var intakeHrs = sum(MONTHS, function (r) { return r.retIntake; });
+        var good = [
+          { t: "Bids with an AI-prepared brief won far more often than bids without one.", f: (wrB * 100).toFixed(1) + "% won with an AI-prepared brief (" + briefWon + " of " + brief.length + ") vs. " + (wrN * 100).toFixed(1) + "% without (" + nobriefWon + " of " + nobrief.length + "). Watch out: the samples are small, and briefs may have gone to easier bids. These go together, but we can't say one caused the other.", target: "sec-jobs" },
+          { t: "The biggest block of time the AI tool gives back is intake and paperwork, not bid hunting.", f: "Intake is " + (intakeShare * 100).toFixed(1) + "% of hours returned (" + intakeHrs.toLocaleString("en-US") + " of " + totalRet.toLocaleString("en-US") + " hrs, " + MONTHS.length + " months). Finding work and paperwork make up the rest. This is a share of a simulated total. These go together, but we can't say one caused the other.", target: "sec-time" },
+          { t: "Cost per bid fell as volume rose — the average bid got cheaper, not just faster.", f: "The AI-assisted average is " + costDrop.toFixed(1) + "% below the by-hand cost per bid (" + a.opps.toLocaleString("en-US") + " bids across " + MONTHS.length + " months). Watch out: both series are simulated and move together by design. These go together, but we can't say one caused the other.", target: "sec-cost" },
+          { t: "Jobs with an AI-prepared brief landed close to estimate. Jobs without one ran over.", f: "Average miss, won jobs only: with an AI-prepared brief " + signedPct(avgErr(JOBS.filter(function (j) { return j.brief; }))) + " (" + nPlain(JOBS.filter(function (j) { return j.brief; }).length) + ") vs. without one " + signedPct(avgErr(JOBS.filter(function (j) { return !j.brief; }))) + " (" + nPlain(JOBS.filter(function (j) { return !j.brief; }).length) + "). Negative means the estimate was too high. Watch out: the samples are very small, and briefs may have gone to better-scoped jobs. These go together, but we can't say one caused the other. Early signal, small sample.", target: "sec-accuracy" }
+        ];
+        var odd = [
+          { t: "The smallest jobs are the easiest to win. Big bids look good but win least often.", f: "Jobs estimated under $50K won " + (wrS * 100).toFixed(1) + "% (" + smallWon + " of " + small.length + ") vs. " + (wrL * 100).toFixed(1) + "% at $50K and up (" + largeWon + " of " + large.length + "). Watch out: the samples are small, and larger jobs are also harder. These go together, but we can't say size caused the gap.", target: "sec-jobs" },
+          { t: "The bids that cost the most to chase have the least accurate estimates. Money spent chasing did not buy accuracy.", f: "The 3 costliest bids (3 jobs) missed by " + missTop.toFixed(1) + "% on average vs. " + missRest.toFixed(1) + "% for the other " + rest.length + " (" + nPlain(rest.length) + "). Watch out: only 3 bids sit at the top. These go together, but we can't say one caused the other.", target: "sec-fromto" },
+          { t: "Time is not lost in estimating. It is lost waiting on other people.", f: "Waiting is " + (waitShare * 100).toFixed(1) + "% of the average lead-to-bid cycle vs. " + ((1 - waitShare) * 100).toFixed(1) + "% estimating (" + MONTHS.length + " months, monthly averages). Watch out: averages hide month-to-month swings. These go together, but we can't say one caused the other.", target: "sec-time" }
+        ];
+        function lane(el, items) {
+          $(el).innerHTML = items.map(function (it, i) {
+            return '<button class="insight" data-target="' + it.target + '">' + it.t +
+              '<span class="fig">' + it.f + '</span><span class="go">See the supporting chart ↓</span></button>';
+          }).join("");
+        }
+        lane("insights-good", good);
+        lane("insights-odd", odd);
+        function briefBars(el) {
+          if (!el) return;
+          el.innerHTML =
+            '<div class="bb-row"><span class="bb-lab">With AI-prepared brief (' + brief.length + ' jobs)</span><span class="bb-track"><span class="bb-fill" style="width:' + (wrB * 100).toFixed(1) + '%"></span></span><span class="bb-val">' + (wrB * 100).toFixed(1) + '% won (' + briefWon + ' / ' + brief.length + ')</span></div>' +
+            '<div class="bb-row"><span class="bb-lab">No brief (' + nobrief.length + ' jobs)</span><span class="bb-track"><span class="bb-fill grey" style="width:' + (wrN * 100).toFixed(1) + '%"></span></span><span class="bb-val">' + (wrN * 100).toFixed(1) + '% won (' + nobriefWon + ' / ' + nobrief.length + ')</span></div>' +
+            '<div class="mini-cap">Small samples. Briefs may have gone to easier bids. These go together, but we can\'t say one caused the other.</div>';
+        }
+        briefBars($("sum-brief"));
+        briefBars($("chart-brief"));
+        var sg = $("sum-insight-good");
+        if (sg) sg.textContent = good[0].t;
+        var so = $("sum-insight-odd");
+        if (so) so.textContent = odd[0].t;
+        Array.prototype.forEach.call(document.querySelectorAll(".insight"), function (b) {
+          b.addEventListener("click", function () { flash(b.getAttribute("data-target"), true); });
+        });
+      }
+
+      function flash(id, scroll) {
+        var el = $(id);
+        if (!el) return;
+        if (el.classList.contains("card")) setCard(el, true);
+        if (scroll) setTimeout(function () { el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 40);
+        el.classList.add("flash");
+        setTimeout(function () { el.classList.remove("flash"); }, 1600);
+      }
+
+      var RANGE_LABELS = { all: "Nov 2025 – Oct 2026", q1: "Nov 2025 – Jan 2026", q2: "Feb – Apr 2026", q3: "May – Jul 2026", q4: "Aug – Oct 2026" };
+      function updateRangeLabel() { var el = $("range-label"); if (el) el.textContent = RANGE_LABELS[state.period]; var cr = $("range-crumb"); if (cr) cr.textContent = RANGE_LABELS[state.period]; }
+
+      function renderTakeaways() {
+        var sample = filteredSample(true);
+        var wonJ = filteredJobs(true);
+        var wr = winRates(sample);
+        var largeJ = wonJ.filter(function (j) { return j.estD >= 100000; });
+        var smallJ = wonJ.filter(function (j) { return j.estD < 100000; });
+        var eL = avgErr(largeJ), eS = avgErr(smallJ);
+        var bW = wonJ.filter(function (j) { return j.brief; }), nbW = wonJ.filter(function (j) { return !j.brief; });
+        var eB = avgErr(bW), eNB = avgErr(nbW);
+        var items = [
+          { h: "Large-job estimates came in under plan", t: "Won jobs of $100K or more ran " + (eL !== null ? signedPct(eL) : "—") + " vs. estimate (" + nPlain(largeJ.length) + ") vs. " + (eS !== null ? signedPct(eS) : "—") + " for smaller won jobs (" + nPlain(smallJ.length) + "). Early signal, small sample. We only see results for jobs we won, so real estimating mistakes may be bigger.", target: "sec-fromto" },
+          { h: "Estimates were closer with an AI-prepared brief", t: "Won jobs with an AI-prepared brief ran " + (eB !== null ? signedPct(eB) : "—") + " vs. estimate (" + nPlain(bW.length) + ") vs. " + (eNB !== null ? signedPct(eNB) : "—") + " without one (" + nPlain(nbW.length) + "). Early signal, small sample. These go together, but we can't say one caused the other.", target: "sec-insights" },
+          { h: "We win fewer of the dollars than of the bids", t: "The win rate for the jobs shown here is " + (wr.byCount !== null ? (wr.byCount * 100).toFixed(1) + "%" : "—") + " by count vs. " + (wr.byDollars !== null ? (wr.byDollars * 100).toFixed(1) + "%" : "—") + " by estimated dollars (" + money(wr.estWon) + " won of " + money(wr.estAll) + " estimated, " + nPlain(sample.length) + "). Early signal, small sample. The big estimates are the ones getting away.", target: "sec-jobs" }
+        ];
+        var g = $("takeaway-grid");
+        if (g) {
+          g.innerHTML = items.map(function (it) { return '<div class="takeaway-item" data-target="' + it.target + '"><b>' + it.h + '</b>' + it.t + '<br><a class="takeaway-link" href="#' + it.target + '">See chart →</a></div>'; }).join("");
+          Array.prototype.forEach.call(g.querySelectorAll(".takeaway-item"), function (el) {
+            el.addEventListener("click", function () { flash(el.getAttribute("data-target"), true); });
+          });
+          Array.prototype.forEach.call(g.querySelectorAll(".takeaway-link"), function (a) {
+            a.addEventListener("click", function (e) { e.preventDefault(); e.stopPropagation(); flash(a.getAttribute("href").slice(1), true); });
+          });
+        }
+      }
+
+      function renderPipeline() {
+        var rows = filteredMonths(), a = aggregates(rows);
+        var popRate = a.bids ? a.wins / a.bids : 0;
+        var wonJ = filteredJobs(true);
+        var avgH = wonJ.length ? avg(wonJ, function (j) { return j.actH; }) : 0;
+        var openBids = PIPELINE_OPEN_ASSUMED;
+        var expWins = openBids * popRate;
+        var expHours = expWins * avgH;
+        var weeks = state.period === "all" ? 52 : 13;
+        var crew = {};
+        LABOR.forEach(function (r) { crew[r.name] = true; });
+        var crewN = Object.keys(crew).length;
+        var capacity = crewN * 40 * weeks;
+        var util = capacity ? (expHours / capacity) * 100 : 0;
+        var take = $("take-pipeline");
+        if (take) take.innerHTML = "<b>" + openBids + "</b> open bids" + '<span class="assumption-badge">Assumption</span>' + " · <b>" + expWins.toFixed(1) + "</b> expected wins" + '<span class="assumption-badge">Assumption</span>' + " · <b>" + Math.round(expHours).toLocaleString("en-US") + " hrs</b> expected vs. " + capacity.toLocaleString("en-US") + " hrs capacity";
+        var note = $("pipeline-note");
+        if (note) note.textContent = "How we get these numbers: the monthly rows track bids (" + a.bids + ") and wins (" + a.wins + ") but not losses, so open bids cannot be worked out from the data. The open count is an assumed simulated input (" + openBids + "), not data. Expected wins = open bids x the overall win rate for the selected period (" + (popRate * 100).toFixed(1) + "%). Expected hours = expected wins x average actual hours per won job (" + avgH.toFixed(1) + " hrs, " + nPlain(wonJ.length) + "). Crew capacity = " + crewN + " electricians (the sample names in the labor rows) x 40 hrs/week x " + weeks + " weeks — an assumption, not data.";
+        var st = $("pipeline-stats");
+        if (st) st.innerHTML = [
+          { v: String(openBids) + '<span class="assumption-badge">Assumption</span>', k: "Open bids — assumed simulated input (cannot be worked out: the monthly rows have no loss count)" },
+          { v: expWins.toFixed(1) + '<span class="assumption-badge">Assumption</span>', k: "Expected wins at the " + (popRate * 100).toFixed(1) + "% overall win rate (selected period)" },
+          { v: Math.round(expHours).toLocaleString("en-US") + " hrs", k: "Expected hours if those wins land, at " + avgH.toFixed(1) + " actual hrs per won job" },
+          { v: capacity.toLocaleString("en-US") + " hrs", k: "Crew capacity in period (" + crewN + " x 40 hrs x " + weeks + " wks, assumption) — expected pipeline load is " + util.toFixed(1) + "% of it" }
+        ].map(function (x) { return '<div class="stat"><div class="v">' + x.v + '</div><div class="k">' + x.k + "</div></div>"; }).join("");
+      }
+
+      function renderSoWhats() {
+        function set(id, txt) { var el = $(id); if (el) el.textContent = txt; }
+        var wonJ = filteredJobs(true), sample = filteredSample(true);
+        var rows = filteredMonths(), a = aggregates(rows);
+        var largeJ = wonJ.filter(function (j) { return j.estD >= 100000; });
+        var eL = avgErr(largeJ), eAll = avgErr(wonJ);
+        var bW = wonJ.filter(function (j) { return j.brief; }), nbW = wonJ.filter(function (j) { return !j.brief; });
+        var eB = avgErr(bW), eNB = avgErr(nbW);
+        var labRows = filteredLabor(), labTot = sum(labRows, function (r) { return r.hrs; }), labEst = sum(labRows, function (r) { return r.estHrs; });
+        var labVar = labEst ? ((labTot - labEst) / labEst) * 100 : 0;
+        set("sowhat-sec-labor", labRows.length ? (labVar > 2 ? "Crews ran " + signedPct(labVar) + " over estimated hours, so labor costs more than planned on these jobs. Tighten the labor estimates or add crew buffer on the next bids." : labVar < -2 ? "Crews came in " + signedPct(labVar) + " vs. estimated hours, so the labor estimates have slack. Keep the margin — do not give the slack away in price." : "Field hours are tracking the estimate (" + signedPct(labVar) + "), so crewing and estimating look right. Hold the current practice.") : "No field hours in this selection.");
+        var mRows = filteredMaterials(), mAct = sum(mRows, function (r) { return r.act; }), mEst = sum(mRows, function (r) { return r.est; });
+        var mVar = mEst ? ((mAct - mEst) / mEst) * 100 : 0;
+        set("sowhat-sec-materials", mRows.length ? (mVar > 2 ? "Materials ran " + signedPct(mVar) + " over estimate (" + money(mAct) + " vs. " + money(mEst) + "), which eats into margin. Re-price the worst category before the next bid." : mVar < -2 ? "Materials came in " + signedPct(mVar) + " under estimate, so estimating is cautious here. No action needed." : "Material spend is on estimate (" + signedPct(mVar) + "), so this part of the bid is priced right. No action needed.") : "No materials in this selection.");
+        var ret = sum(rows, function (r) { return r.retFind + r.retIntake + r.retPaper; }), man = sum(rows, function (r) { return r.manualHrs; });
+        set("sowhat-sec-time", man ? "The AI tool gives back " + ret.toLocaleString("en-US") + " of " + man.toLocaleString("en-US") + " by-hand hours (" + (ret / man * 100).toFixed(1) + "%), which is time staff can spend on bids instead. Keep it on intake and paperwork, where most of the time comes back." : "No months in this selection.");
+        var ppw = pursuitPerWin(sample);
+        set("sowhat-sec-cost", ppw.large.perWin !== null && ppw.small.perWin !== null ? "A large win costs " + money(ppw.large.perWin) + " in bid spend vs. " + money(ppw.small.perWin) + " for a small win (" + ppw.large.n + " large jobs / " + ppw.small.n + " small jobs), so big bids are far costlier to land. Check large bids harder before spending. Early signal, small sample." : "Not enough sample jobs in this selection for bid cost per win.");
+        var over = wonJ.filter(function (j) { return j.actD > j.estD; }).length;
+        set("sowhat-sec-fromto", wonJ.length ? over + " of " + wonJ.length + " won jobs ran over on dollars, and the average miss is " + (eAll !== null ? signedPct(eAll) : "—") + " (negative = estimate was too high). Watch the single overruns, and add cushion where jobs keep running over. Early signal, small sample." : "No won jobs in this selection.");
+        var overH = wonJ.filter(function (j) { return j.actH > j.estH; }).length;
+        set("sowhat-sec-fromto-hours", wonJ.length ? overH + " of " + wonJ.length + " won jobs ran over on hours, and hour overruns usually pull dollars with them. Review crew loading on those jobs first." : "No won jobs in this selection.");
+        set("sowhat-sec-accuracy", eL !== null && eL > 5 ? "Large-job estimates run " + signedPct(eL) + " (" + nPlain(largeJ.length) + "), so large jobs cost more than planned. Add extra cushion on $100K+ estimates. Early signal, small sample." : eL !== null && eL < -5 ? "Large-job estimates run " + signedPct(eL) + " (" + nPlain(largeJ.length) + "), so large estimates carry hidden slack. Sharpen them to win more large work. Early signal, small sample." : "The average miss is " + (eAll !== null ? signedPct(eAll) : "—") + " overall (" + nPlain(wonJ.length) + ")" + (eL !== null ? ", and large jobs sit at " + signedPct(eL) : "") + ", so estimates do not lean one way. Keep watching it. Early signal, small sample.");
+        set("sowhat-sec-insights", eB !== null && eNB !== null && (eNB - eB) > 5 ? "The brief gap is " + (eNB - eB).toFixed(1) + " points (" + signedPct(eB) + " with an AI-prepared brief vs. " + signedPct(eNB) + " without), which is big enough to act on. Give every bid a brief until the sample is big enough to be sure. Early signal, small sample." : "No single pattern in this selection is large enough to act on alone. Treat the insights as an early signal, small sample.");
+        var tM = sum(wonJ, function (j) { return j.margin; }), tP = sum(wonJ, function (j) { return j.price; });
+        set("sowhat-sec-jobs", wonJ.length ? "Won work carries " + money(tM) + " of simulated margin (" + (tP ? (tM / tP * 100).toFixed(1) : "0.0") + "% of simulated price), so the wins are healthy. The leak is the " + money(sum(filteredLost(), function (j) { return j.pursuit; })) + " of bid spend on bids we lost." : "No won jobs in this selection.");
+        var popRate = a.bids ? a.wins / a.bids : 0;
+        var avgH = wonJ.length ? avg(wonJ, function (j) { return j.actH; }) : 0;
+        var expH = PIPELINE_OPEN_ASSUMED * popRate * avgH;
+        var weeks = state.period === "all" ? 52 : 13;
+        var crewN2 = Object.keys(LABOR.reduce(function (m, r) { m[r.name] = true; return m; }, {})).length;
+        var cap = crewN2 * 40 * weeks;
+        set("sowhat-sec-pipeline", cap ? "Expected pipeline load is about " + (expH / cap * 100).toFixed(1) + "% of crew capacity, but that rests on assumed inputs — the assumed open-bid count (" + PIPELINE_OPEN_ASSUMED + ") and the crew capacity guess (" + crewN2 + " electricians x 40 hrs/week x " + weeks + " weeks). Do not hire against this pipeline yet." : "No capacity basis in this selection.");
+      }
+
+      function updateDataAsOf() {
+        var el = $("data-asof");
+        if (!el) return;
+        var a = aggregates(filteredMonths());
+        var jc = filteredSample(true).length;
+        el.textContent = "Simulated data · Period " + RANGE_LABELS[state.period] + " · " + a.bids + " bids, " + jc + " sample jobs.";
+      }
+      function renderAll() { renderKPIs(); renderTime(); renderCost(); renderFromTo(); renderJobs(); renderAccuracy(); renderLabor(); renderMaterials(); renderPipeline(); renderTakeaways(); syncSummaries(); renderSoWhats(); updateRangeLabel(); updateDataAsOf(); }
+
+      $("period").addEventListener("change", function () { state.period = this.value; renderAll(); });
+      $("wtype").addEventListener("change", function () { state.wtype = this.value; renderAll(); });
+
+      /* Grafana-style hover tooltip for chart points */
+      var tipEl = document.createElement("div");
+      tipEl.className = "tooltip";
+      document.body.appendChild(tipEl);
+      document.addEventListener("mouseover", function (e) {
+        var t = e.target && e.target.closest ? e.target.closest("[data-tip]") : null;
+        if (t) { tipEl.innerHTML = t.getAttribute("data-tip"); tipEl.style.opacity = "1"; }
+      });
+      document.addEventListener("mousemove", function (e) {
+        if (tipEl.style.opacity === "1") {
+          var x = Math.min(e.clientX + 14, window.innerWidth - tipEl.offsetWidth - 10);
+          var y = Math.min(e.clientY + 16, window.innerHeight - tipEl.offsetHeight - 10);
+          tipEl.style.left = Math.max(4, x) + "px";
+          tipEl.style.top = Math.max(4, y) + "px";
+        }
+      });
+      document.addEventListener("mouseout", function (e) {
+        if (e.target && e.target.closest && e.target.closest("[data-tip]")) tipEl.style.opacity = "0";
+      });
+
+      /* Top-bar phone actions: search jumps to the filters; menu expands/collapses every card */
+      $("btn-search").addEventListener("click", function () {
+        var controls = document.querySelector(".controls");
+        if (controls) controls.scrollIntoView({ behavior: "smooth", block: "start" });
+        setTimeout(function () { $("period").focus({ preventScroll: true }); }, 350);
+      });
+      $("btn-menu").addEventListener("click", function () {
+        if (window.innerWidth <= 700) {
+          var open = document.body.classList.toggle("sidebar-open");
+          this.setAttribute("aria-pressed", open ? "true" : "false");
+        } else {
+          var closed = document.body.classList.toggle("sidebar-closed");
+          this.setAttribute("aria-pressed", closed ? "false" : "true");
+        }
+      });
+      $("scrim").addEventListener("click", function () { document.body.classList.remove("sidebar-open"); });
+
+      /* Sidebar navigation: expand the target card (if any), then jump to it */
+      Array.prototype.forEach.call(document.querySelectorAll(".side-link"), function (link) {
+        link.addEventListener("click", function () {
+          Array.prototype.forEach.call(document.querySelectorAll(".side-link"), function (l) { l.classList.remove("active"); });
+          link.classList.add("active");
+          document.body.classList.remove("sidebar-open");
+          var target = link.getAttribute("data-target");
+          if (target === "overview") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+          flash(target, true);
+        });
+      });
+
+      /* ================================================================
+         Dashboard overview: every section becomes a compact card in a
+         grid; the card head + summary toggle the full detail in place.
+         ================================================================ */
+      function setCard(el, open) {
+        el.classList.toggle("expanded", open);
+        var head = el.querySelector(".card-toggle");
+        var detail = el.querySelector(".card-detail");
+        var lab = el.querySelector(".expand-label");
+        if (head) head.setAttribute("aria-expanded", open ? "true" : "false");
+        if (lab) lab.textContent = open ? "Collapse" : "Expand";
+        if (detail) detail.hidden = !open;
+      }
+      function expandCard(id) { var el = $(id); if (el && el.classList.contains("card")) setCard(el, true); }
+
+      function makeCard(el, summaryText, extraHTML) {
+        el.classList.add("card");
+        var head = el.querySelector(".block-head");
+        if (!head) {
+          head = document.createElement("div");
+          head.className = "block-head";
+          head.innerHTML = '<span class="num">08</span><h2>Insights</h2><span class="takeaway">Beneficial vs. counterintuitive</span>';
+          el.insertBefore(head, el.firstChild);
+        }
+        head.classList.add("card-toggle");
+        head.setAttribute("role", "button");
+        head.setAttribute("tabindex", "0");
+        head.setAttribute("aria-expanded", "false");
+        var chev = document.createElement("span");
+        chev.className = "chev";
+        chev.setAttribute("aria-hidden", "true");
+        chev.textContent = "▾";
+        head.appendChild(chev);
+        var expLab = document.createElement("span");
+        expLab.className = "expand-label";
+        expLab.textContent = "Expand";
+        head.appendChild(expLab);
+        var summary = document.createElement("div");
+        summary.className = "card-summary";
+        summary.innerHTML = summaryText + (extraHTML || "") + '<div class="sowhat" id="sowhat-' + el.id + '"></div>';
+        var detail = document.createElement("div");
+        detail.className = "card-detail";
+        detail.id = el.id + "-detail";
+        detail.hidden = true;
+        head.setAttribute("aria-controls", detail.id);
+        Array.prototype.slice.call(el.childNodes).forEach(function (n) { if (n !== head) detail.appendChild(n); });
+        el.appendChild(summary);
+        el.appendChild(detail);
+        function toggle() { setCard(el, !el.classList.contains("expanded")); }
+        head.addEventListener("click", toggle);
+        head.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+        });
+        summary.addEventListener("click", toggle);
+      }
+
+      function syncSummaries() {
+        var rows = filteredMonths(), a = aggregates(rows);
+        var ret = sum(rows, function (r) { return r.retFind + r.retIntake + r.retPaper; });
+        var man = sum(rows, function (r) { return r.manualHrs; });
+        var st = $("spark-time");
+        if (st) st.innerHTML = sparkLines([
+          { values: rows.map(function (r) { return r.retFind + r.retIntake + r.retPaper; }), color: C.orange, fill: true },
+          { values: rows.map(function (r) { return r.manualHrs; }), color: "#6c757d", fill: false }
+        ], 300, 78, { unit: "hrs", suffix: " hrs", padL: 46 });
+        var ct = $("cap-time");
+        if (ct) ct.textContent = ret.toLocaleString("en-US") + " hrs returned vs. " + man.toLocaleString("en-US") + " hrs by hand";
+        var sc = $("spark-cost");
+        if (sc) sc.innerHTML = sparkLines([
+          { values: rows.map(function (r) { return r.costAgent; }), color: C.orange, fill: true },
+          { values: rows.map(function (r) { return r.costManual; }), color: "#6c757d", fill: false }
+        ], 300, 78, { unit: "$ per bid", prefix: "$", padL: 42 });
+        var cc = $("cap-cost");
+        if (cc && a.opps) cc.textContent = money(a.spendA / a.opps) + " AI-assisted vs. " + money(a.spendM / a.opps) + " by hand per bid";
+        var jobsA = filteredJobs(false);
+        var within = jobsA.filter(function (j) { return Math.abs(varPct(j)) <= 10; }).length;
+        var sa = $("spark-acc");
+        if (sa) sa.innerHTML = sparkLines([
+          { values: rows.map(function (r) { return r.accShare; }), color: C.orange, fill: true }
+        ], 300, 78, { unit: "% within ±10%", suffix: "%", padL: 38 });
+        var ca = $("cap-acc");
+        if (ca) ca.textContent = jobsA.length ? within + " of " + jobsA.length + " sample jobs within ±10% of actual cost" : "No sample jobs in this selection";
+        var jobs = filteredJobs(true);
+        var overH = jobs.filter(function (j) { return j.actH > j.estH; }).length;
+        var th = $("take-fromto-h");
+        if (th) th.innerHTML = jobs.length ? "<b>" + overH + " of " + jobs.length + "</b> sample jobs ran over their estimated hours" : "";
+        var sfd = $("spark-ftd");
+        if (sfd) sfd.innerHTML = miniDumbbells(jobs.slice().sort(function (a2, b2) { return b2.estD - a2.estD; }), "D");
+        var sfh = $("spark-fth");
+        if (sfh) sfh.innerHTML = miniDumbbells(jobs.slice().sort(function (a2, b2) { return b2.estH - a2.estH; }), "H");
+        var mjobsWon = filteredJobs(true);
+        var mjMargin = sum(mjobsWon, function (j) { return j.margin; });
+        var mjPrice = sum(mjobsWon, function (j) { return j.price; });
+        var mjm = $("mini-margin");
+        if (!mjm) { var mjEl = $("mini-jobs"); if (mjEl && mjEl.parentNode) { mjm = document.createElement("div"); mjm.id = "mini-margin"; mjm.className = "mini-cap"; mjEl.parentNode.insertBefore(mjm, mjEl); } }
+        if (mjm) mjm.textContent = mjobsWon.length ? "Total simulated margin on won jobs: " + money(mjMargin) + " (" + (mjPrice ? (mjMargin / mjPrice * 100).toFixed(1) : "0.0") + "% of simulated price " + money(mjPrice) + ")" : "No won jobs in this selection";
+        var mj = $("mini-jobs");
+        if (mj) {
+          mj.innerHTML = jobs.slice(0, 3).map(function (j) {
+            return '<div class="mini-row"><span>' + j.name + '</span><span class="pill ' + (j.won ? "won" : "lost") + '">' + (j.won ? "Won" : "Lost") + "</span></div>";
+          }).join("") + (jobs.length > 3 ? '<div class="mini-more">+ ' + (jobs.length - 3) + " more — expand for the full table</div>" : "");
+        }
+      }
+
+      function setupDashboard() {
+        /* Split the from–to section into two cards: dollars and time */
+        var ft = $("sec-fromto");
+        var ftCards = ft.querySelectorAll(".chart-card");
+        var ftH = document.createElement("section");
+        ftH.className = "block";
+        ftH.id = "sec-fromto-hours";
+        var headH = ft.querySelector(".block-head").cloneNode(true);
+        headH.querySelector("h2").textContent = "Estimate vs. Actual — In Time";
+        var takeH = headH.querySelector(".takeaway");
+        takeH.id = "take-fromto-h";
+        takeH.innerHTML = "";
+        var numH = headH.querySelector(".num"); if (numH) numH.textContent = "06";
+        ftH.appendChild(headH);
+        ftH.appendChild(ft.querySelector(".sim-note").cloneNode(true));
+        var chartsH = document.createElement("div");
+        chartsH.className = "charts single";
+        chartsH.appendChild(ftCards[1]);
+        ftH.appendChild(chartsH);
+        ft.querySelector(".block-head h2").textContent = "Estimate vs. Actual — In Dollars";
+        ft.querySelector(".charts").classList.add("single");
+        ft.parentNode.insertBefore(ftH, ft.nextSibling);
+
+        /* Insights becomes a card: lanes move into a wrapper inside its detail */
+        var ins = document.querySelector(".insights");
+        ins.id = "sec-insights";
+        var lanesWrap = document.createElement("div");
+        lanesWrap.className = "lanes-wrap";
+        var bv = document.createElement("div");
+        bv.className = "brief-viz";
+        bv.innerHTML = '<span class="illus-badge detail-badge">Illustrative — based on ' + ALL_JOBS.length + ' simulated jobs</span><h3>Win Rate — With vs. Without an AI-Prepared Brief (Jobs Shown Here)</h3><div id="chart-brief"></div>';
+        lanesWrap.appendChild(bv);
+        Array.prototype.slice.call(ins.querySelectorAll(".lane")).forEach(function (l) { lanesWrap.appendChild(l); });
+        ins.appendChild(lanesWrap);
+
+        /* Overview grid below the KPI strip */
+        var grid = document.createElement("div");
+        grid.className = "dash-grid";
+        var kpisEl = $("kpis");
+        var snAnchor = $("sample-note");
+        kpisEl.parentNode.insertBefore(grid, snAnchor ? snAnchor.nextSibling : kpisEl.nextSibling);
+        ["sec-labor", "sec-materials", "sec-time", "sec-cost", "sec-fromto", "sec-fromto-hours", "sec-accuracy", "sec-insights", "sec-jobs", "sec-pipeline"].forEach(function (id) {
+          grid.appendChild($(id));
+        });
+
+        makeCard($("sec-labor"), "Whole division, not just estimating: field hours each electrician has logged on each job. Sample names only. Totals tie to the actual hours in the sample jobs table.",
+          '<div class="labor-summary-grid" id="labor-summary"></div><div class="mini-chart" id="spark-labor"></div><div class="mini-cap" id="cap-labor"></div>');
+        makeCard($("sec-materials"), "Bought materials for the same sample jobs — generic categories only, no suppliers or brands. Every job's material cost sits under its actual dollar total in the jobs table.",
+          '<div class="mat-summary-grid" id="materials-summary"></div><div class="mini-chart" id="spark-mat"></div><div class="mini-cap" id="cap-mat"></div>');
+        makeCard($("sec-time"), "Hours the AI tool gives back, by task, and days from lead to bid submitted. Blue is hours returned. Grey is the same work by hand.",
+          '<div class="mini-chart" id="spark-time"></div><div class="mini-cap" id="cap-time"></div>');
+        makeCard($("sec-cost"), "Average cost per bid over time — AI-assisted vs. done by hand.",
+          '<div class="mini-chart" id="spark-cost"></div><div class="mini-cap" id="cap-cost"></div>');
+        makeCard($("sec-fromto"), "Each sample job as a line from its estimated dollars to its actual cost. Red ran over. Green came in under.",
+          '<div class="mini-chart" id="spark-ftd"></div>');
+        makeCard($("sec-fromto-hours"), "The same sample jobs in crew hours — estimated hours to actual hours.",
+          '<div class="mini-chart" id="spark-fth"></div>');
+        makeCard($("sec-accuracy"), "How often estimates land within ±10% of actual, and how big the typical miss is.",
+          '<div class="mini-chart" id="spark-acc"></div><div class="mini-cap" id="cap-acc"></div>');
+        makeCard($("sec-insights"), "The patterns worth pointing at — what argues for the AI tool, and what cuts against the obvious story. Expand, then select an insight to jump to the chart behind it.",
+          '<div><span class="illus-badge">Illustrative — based on ' + ALL_JOBS.length + ' simulated jobs</span></div><div id="sum-brief"></div>' +
+          '<div class="mini-insight good"><span class="mark" aria-hidden="true">✓</span><span id="sum-insight-good"></span></div>' +
+          '<div class="mini-insight odd"><span class="mark" aria-hidden="true">!</span><span id="sum-insight-odd"></span></div>');
+        makeCard($("sec-pipeline"), "Open bids, expected wins at the current overall win rate, and expected hours against crew capacity. The open-bid count is an assumed simulated input — the data tracks bids and wins but not losses, so it cannot be worked out.",
+          '');
+        makeCard($("sec-jobs"), "The won sample jobs behind every figure on this page, plus the lost bids (estimates only) underneath. Prices and margins are simulated. Expand for the full table. Select a row there to highlight the job in the estimate vs. actual charts.",
+          '<div class="mini-rows" id="mini-jobs"></div>');
+      }
+
+      (function setupHowToRead() {
+        var box = $("how-to-read");
+        if (!box) return;
+        var head = box.querySelector(".card-toggle");
+        var detail = box.querySelector(".card-detail");
+        var lab = box.querySelector(".expand-label");
+        var chev = box.querySelector(".chev");
+        function toggle() {
+          var open = box.classList.toggle("expanded");
+          if (head) head.setAttribute("aria-expanded", open ? "true" : "false");
+          if (lab) lab.textContent = open ? "Collapse" : "Expand";
+          if (chev) chev.style.transform = open ? "rotate(180deg)" : "";
+          if (detail) detail.hidden = !open;
+        }
+        if (head) {
+          head.addEventListener("click", toggle);
+          head.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+        }
+      })();
+      setupDashboard();
+      /* Phone shortening (Step 5): below 700px, cards below section 02
+         (sections 03-10) start collapsed — title + summary/takeaway visible,
+         detail hidden until tapped. Sections 01 and 02 are left as-is
+         (not forced collapsed by this rule), as are the header, Key
+         Takeaways, filters, KPI tiles and notes. Desktop (>=700px) is
+         untouched: this runs only on a narrow initial viewport, once,
+         so it never collapses a card the person has already opened.
+         Sidebar-nav and insight jumps already expand-then-scroll via flash(). */
+      (function applyPhoneCollapseDefaults() {
+        if (!window.matchMedia || !window.matchMedia("(max-width: 700px)").matches) return;
+        ["sec-time", "sec-cost", "sec-fromto", "sec-fromto-hours", "sec-accuracy", "sec-insights", "sec-jobs", "sec-pipeline"].forEach(function (id) {
+          var el = $(id);
+          if (el && el.classList.contains("card")) setCard(el, false);
+        });
+      })();
+      renderInsights();
+      renderAll();
+    </script>
+  </body>
+</html>
