@@ -834,6 +834,59 @@
         .controls .scope-note { display: none; }
         .kpis .small-box .basis, .kpis .kpi-target { font-size: 11.5px; line-height: 1.45; }
       }
+      /* ---------- Document upload — feature preview (self-contained; changes no dashboard figure) ---------- */
+      .up-steps { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); align-items: start; }
+      .up-panel { background: var(--panel-soft); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
+      .up-panel h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+      .up-panel .cap { color: var(--muted); font-size: 12.5px; margin: 0 0 12px; line-height: 1.5; }
+      .up-doc-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+      .up-doc-tab {
+        background: #ffffff; color: var(--ink); border: 1px solid var(--control); border-radius: 6px;
+        font: inherit; font-size: 13.5px; font-weight: 500; padding: 9px 14px; min-height: 44px; cursor: pointer;
+      }
+      .up-doc-tab:hover { border-color: var(--accent); }
+      .up-doc-tab[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+      .up-own { margin-top: 14px; border-top: 1px solid var(--rule); padding-top: 14px; }
+      .up-file-input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+      .up-file-label {
+        display: inline-flex; align-items: center; min-height: 44px; padding: 8px 14px;
+        background: #ffffff; border: 1px solid var(--control); border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 13.5px;
+      }
+      .up-file-label:hover { border-color: var(--accent); color: var(--accent); }
+      .up-file-input:focus-visible + .up-file-label { outline: 2px solid var(--accent); outline-offset: 2px; }
+      .up-own .cap { margin: 10px 0 0; }
+      .up-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; }
+      .up-field label { display: block; font-size: 12px; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
+      .up-field input, .up-field select {
+        width: 100%; height: 38px; background: #ffffff; color: var(--ink);
+        border: 1px solid var(--control); border-radius: 6px; padding: 0 10px; font: inherit; font-size: 13.5px;
+      }
+      .up-field input:focus-visible, .up-field select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+      .up-actions { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; margin-top: 16px; }
+      .up-btn {
+        background: var(--accent); color: #ffffff; border: 1px solid var(--accent); border-radius: 6px;
+        font: inherit; font-size: 14px; font-weight: 600; padding: 10px 18px; min-height: 44px; cursor: pointer;
+      }
+      .up-btn:hover { background: #0069d9; }
+      .up-btn[disabled] { opacity: 0.55; cursor: default; }
+      .up-btn[disabled]:hover { background: var(--accent); }
+      .up-status { font-size: 13px; color: var(--muted); line-height: 1.5; }
+      .up-folders-head { font-size: 14px; font-weight: 600; margin: 22px 0 10px; }
+      .up-folders { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--gap); }
+      .up-folder { background: #ffffff; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
+      .up-folder h3 { margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--rule); font-size: 13px; font-weight: 600; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+      .up-folder .count { color: var(--faint); font-weight: 500; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .up-file { padding: 10px 14px; border-top: 1px solid var(--rule); font-size: 13px; }
+      .up-file:first-child { border-top: none; }
+      .up-file .frow { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+      .up-file .fname { font-weight: 500; line-height: 1.4; }
+      .up-file .fmeta { color: var(--muted); font-size: 12px; line-height: 1.55; margin-top: 3px; font-variant-numeric: tabular-nums; }
+      .pill.filed { background: #d4edda; color: #155724; }
+      .pill.samplefile { background: #e9ecef; color: #495057; }
+      .up-undo { background: none; border: 0; color: var(--accent); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 6px 0 0; min-height: 32px; }
+      .up-undo:hover, .up-undo:focus-visible { text-decoration: underline; }
+      @media (max-width: 1000px) { .up-steps { grid-template-columns: 1fr; } .up-folders { grid-template-columns: 1fr; } }
+      @media (max-width: 700px) { .up-fields { grid-template-columns: 1fr; } .up-btn { width: 100%; } }
     </style>
   </head>
   <body>
@@ -855,6 +908,7 @@
         <button class="side-link" type="button" data-target="sec-insights"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 21h4"/><path d="M12 3a6 6 0 0 0-3.5 10.9c.7.5 1 1.2 1.2 2.1h4.6c.2-.9.5-1.6 1.2-2.1A6 6 0 0 0 12 3z"/></svg><span class="side-num">08</span>Insights</button>
         <button class="side-link" type="button" data-target="sec-jobs"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg><span class="side-num">09</span>Sample Jobs</button>
         <button class="side-link" type="button" data-target="sec-pipeline"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 19V5"/><path d="M4 15c3-2 5 2 8 0s5 2 8 0V6c-3 2-5-2-8 0S7 8 4 6"/></svg><span class="side-num">10</span>Pipeline</button>
+        <button class="side-link" type="button" data-target="sec-upload"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 16V4"/><path d="M6 10l6-6 6 6"/><path d="M4 20h16"/></svg><span class="side-num">11</span>Document Upload</button>
       </nav>
       <div class="side-foot">Simulated data — for presentation only. No figure here is a real Osborne Electric result.</div>
     </aside>
@@ -1171,6 +1225,83 @@
           </table>
         </div>
         <div class="stat-row" id="materials-stats"></div>
+      </section>
+
+      <!-- 11. Document upload — feature preview (self-contained: files sample documents into the folders below only; no dashboard figure reads from or writes to this section) -->
+      <section class="block" id="sec-upload">
+        <div class="block-head">
+          <span class="num">11</span>
+          <h2>Document Upload — Paperwork Into the Dashboard</h2>
+          <span class="takeaway">Feature preview</span>
+        </div>
+        <p class="sim-note">Feature preview — sample documents only. How it will work: you upload a document — a bid sheet, a material invoice, a labor-hours sheet — the bot reads it and fills in the fields, you check them, and approving files the document into the folder for its type. In this preview, approving files the sample document into the folders below and nothing else — every figure above stays exactly as it is.</p>
+        <div class="up-steps">
+          <div class="up-panel">
+            <h3>1 · Pick a document</h3>
+            <p class="cap">Walk the flow with one of the three sample documents — one of each kind the bot will handle.</p>
+            <div class="up-doc-tabs" role="group" aria-label="Sample documents">
+              <button type="button" class="up-doc-tab" data-doc="bid" aria-pressed="true">Bid sheet</button>
+              <button type="button" class="up-doc-tab" data-doc="invoice" aria-pressed="false">Material invoice</button>
+              <button type="button" class="up-doc-tab" data-doc="labor" aria-pressed="false">Labor-hours sheet</button>
+            </div>
+            <div class="up-own">
+              <input class="up-file-input" type="file" id="up-file-input" />
+              <label class="up-file-label" for="up-file-input">Pick a file of your own</label>
+              <p class="cap" id="up-file-note">In this preview your own file is not read — only its name shows here. Reading real files arrives with the backend phase.</p>
+            </div>
+          </div>
+          <div class="up-panel">
+            <h3>2 · Check what the bot read</h3>
+            <p class="cap" id="up-extract-cap">What the bot read off the sample bid sheet. Fix anything that looks wrong — nothing is filed until you approve it.</p>
+            <div class="up-fields" id="up-fields"></div>
+            <div class="up-actions">
+              <button type="button" class="up-btn" id="up-approve">Approve &amp; file it</button>
+              <span class="up-status" id="up-status" aria-live="polite">Waiting for your check — nothing is filed yet.</span>
+            </div>
+          </div>
+        </div>
+        <h3 class="up-folders-head">3 · Document folders — approved documents file themselves by type</h3>
+        <div class="up-folders">
+          <div class="up-folder">
+            <h3>Bids <span class="count" id="up-count-bids">2 documents</span></h3>
+            <div id="up-list-bids">
+              <div class="up-file">
+                <div class="frow"><span class="fname">Community center panel bid (sample).pdf</span><span class="pill samplefile">Sample</span></div>
+                <div class="fmeta">$96,400 bid · est. $88,900 · 342 est. hrs · Filed Oct 28, 2026</div>
+              </div>
+              <div class="up-file">
+                <div class="frow"><span class="fname">Clinic lighting bid (sample).pdf</span><span class="pill samplefile">Sample</span></div>
+                <div class="fmeta">$27,300 bid · est. $25,100 · 118 est. hrs · Filed Oct 21, 2026</div>
+              </div>
+            </div>
+          </div>
+          <div class="up-folder">
+            <h3>Material Invoices <span class="count" id="up-count-invoices">2 documents</span></h3>
+            <div id="up-list-invoices">
+              <div class="up-file">
+                <div class="frow"><span class="fname">Invoice — wire &amp; cable (sample).pdf</span><span class="pill samplefile">Sample</span></div>
+                <div class="fmeta">$12,480 · Warehouse panel upgrade · Filed Oct 30, 2026</div>
+              </div>
+              <div class="up-file">
+                <div class="frow"><span class="fname">Invoice — lighting fixtures (sample).pdf</span><span class="pill samplefile">Sample</span></div>
+                <div class="fmeta">$9,150 · School lighting retrofit · Filed Oct 24, 2026</div>
+              </div>
+            </div>
+          </div>
+          <div class="up-folder">
+            <h3>Labor Hours <span class="count" id="up-count-labor">2 documents</span></h3>
+            <div id="up-list-labor">
+              <div class="up-file">
+                <div class="frow"><span class="fname">Timesheet — week of Oct 19, 2026 (sample).pdf</span><span class="pill samplefile">Sample</span></div>
+                <div class="fmeta">152 hrs · Fire alarm device refresh · Filed Oct 24, 2026</div>
+              </div>
+              <div class="up-file">
+                <div class="frow"><span class="fname">Timesheet — week of Oct 12, 2026 (sample).pdf</span><span class="pill samplefile">Sample</span></div>
+                <div class="fmeta">141 hrs · Water plant variable frequency drive install · Filed Oct 17, 2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </section>
 
       <div class="how-to-read card" id="how-to-read">
@@ -2697,6 +2828,170 @@
       })();
       renderInsights();
       renderAll();
+    </script>
+    <script>
+      "use strict";
+      /* ================================================================
+         Document upload — feature preview. Fully self-contained: it
+         reads and writes only inside #sec-upload. It never touches the
+         dashboard dataset, tiles, totals, or job tables above.
+         Sample documents only — picking a real file shows its name;
+         reading real files arrives with the backend phase.
+         ================================================================ */
+      (function () {
+        var JOB_OPTIONS = [
+          "School lighting retrofit",
+          "Pump station motor control center",
+          "Warehouse panel upgrade",
+          "Office structured cabling",
+          "Switchgear repair (service)",
+          "School intercom & clocks",
+          "Water plant variable frequency drive install",
+          "Generator automatic transfer switch swap (service)",
+          "Fire alarm device refresh"
+        ];
+        var DOCS = {
+          bid: {
+            tab: "bid sheet",
+            file: "Sample bid — library lighting upgrade.pdf",
+            folder: "bids",
+            folderName: "Bids",
+            fields: [
+              { k: "job", label: "Job name", value: "Library lighting upgrade (sample)" },
+              { k: "bid", label: "Bid amount", value: "$48,500" },
+              { k: "est", label: "Estimated cost", value: "$44,200" },
+              { k: "hrs", label: "Estimated hours", value: "168 hrs" },
+              { k: "due", label: "Bid due", value: "Nov 20, 2026" },
+              { k: "outcome", label: "Outcome so far", value: "Open — no decision yet" }
+            ],
+            summary: function (v) { return v.bid + " bid · est. " + v.est + " · " + v.hrs + " · Filed just now"; }
+          },
+          invoice: {
+            tab: "material invoice",
+            file: "Sample invoice — conduit & fittings.pdf",
+            folder: "invoices",
+            folderName: "Material Invoices",
+            fields: [
+              { k: "from", label: "Invoice from", value: "Materials supplier (sample)" },
+              { k: "total", label: "Invoice total", value: "$6,240" },
+              { k: "date", label: "Invoice date", value: "Oct 30, 2026" },
+              { k: "cats", label: "Materials bought", value: "Conduit & fittings, devices & controls" },
+              { k: "job", label: "Belongs to job", type: "select", options: JOB_OPTIONS, value: "Warehouse panel upgrade" }
+            ],
+            summary: function (v) { return v.total + " · " + v.cats + " · " + v.job + " · Filed just now"; }
+          },
+          labor: {
+            tab: "labor-hours sheet",
+            file: "Sample timesheet — week of Oct 26, 2026.pdf",
+            folder: "labor",
+            folderName: "Labor Hours",
+            fields: [
+              { k: "week", label: "Week of", value: "Oct 26, 2026" },
+              { k: "crew", label: "Crew on the sheet", value: "3 electricians (sample names)" },
+              { k: "hrs", label: "Total hours", value: "118 hrs" },
+              { k: "job", label: "Belongs to job", type: "select", options: JOB_OPTIONS, value: "School lighting retrofit" }
+            ],
+            summary: function (v) { return v.hrs + " · Week of " + v.week + " · " + v.job + " · Filed just now"; }
+          }
+        };
+        var current = "bid";
+        var filed = {}; /* docKey -> entry element, while filed */
+        var fieldsEl = document.getElementById("up-fields");
+        var capEl = document.getElementById("up-extract-cap");
+        var approveBtn = document.getElementById("up-approve");
+        var statusEl = document.getElementById("up-status");
+        if (!fieldsEl || !approveBtn) return;
+
+        function esc(s) {
+          return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        }
+        function renderFields() {
+          var doc = DOCS[current];
+          fieldsEl.innerHTML = doc.fields.map(function (f) {
+            var id = "up-f-" + f.k;
+            if (f.type === "select") {
+              var opts = f.options.map(function (o) {
+                return '<option value="' + esc(o) + '"' + (o === f.value ? " selected" : "") + ">" + esc(o) + "</option>";
+              }).join("");
+              return '<div class="up-field"><label for="' + id + '">' + esc(f.label) + '</label><select id="' + id + '" data-k="' + f.k + '">' + opts + "</select></div>";
+            }
+            return '<div class="up-field"><label for="' + id + '">' + esc(f.label) + '</label><input id="' + id + '" data-k="' + f.k + '" type="text" value="' + esc(f.value) + '" /></div>';
+          }).join("");
+          capEl.textContent = "What the bot read off the sample " + doc.tab + ". Fix anything that looks wrong — nothing is filed until you approve it.";
+          if (filed[current]) {
+            approveBtn.disabled = true;
+            approveBtn.textContent = "Filed in " + doc.folderName;
+            statusEl.textContent = "Already filed in " + doc.folderName + " — take it back out below to redo it.";
+          } else {
+            approveBtn.disabled = false;
+            approveBtn.textContent = "Approve & file it";
+            statusEl.textContent = "Waiting for your check — nothing is filed yet.";
+          }
+        }
+        function readValues() {
+          var v = {};
+          Array.prototype.forEach.call(fieldsEl.querySelectorAll("[data-k]"), function (el) { v[el.getAttribute("data-k")] = el.value; });
+          return v;
+        }
+        function updateCount(folder) {
+          var list = document.getElementById("up-list-" + folder);
+          var count = document.getElementById("up-count-" + folder);
+          if (list && count) {
+            var n = list.querySelectorAll(".up-file").length;
+            count.textContent = n + (n === 1 ? " document" : " documents");
+          }
+        }
+        Array.prototype.forEach.call(document.querySelectorAll(".up-doc-tab"), function (tab) {
+          tab.addEventListener("click", function () {
+            Array.prototype.forEach.call(document.querySelectorAll(".up-doc-tab"), function (t) { t.setAttribute("aria-pressed", "false"); });
+            tab.setAttribute("aria-pressed", "true");
+            current = tab.getAttribute("data-doc");
+            renderFields();
+          });
+        });
+        approveBtn.addEventListener("click", function () {
+          if (filed[current]) return;
+          var doc = DOCS[current];
+          var v = readValues();
+          var entry = document.createElement("div");
+          entry.className = "up-file";
+          entry.innerHTML =
+            '<div class="frow"><span class="fname">' + esc(doc.file) + '</span><span class="pill filed">Just filed</span></div>' +
+            '<div class="fmeta">' + esc(doc.summary(v)) + "</div>";
+          var undo = document.createElement("button");
+          undo.type = "button";
+          undo.className = "up-undo";
+          undo.textContent = "Take it back out";
+          undo.addEventListener("click", function () {
+            if (entry.parentNode) entry.parentNode.removeChild(entry);
+            delete filed[docKeyOf(doc)];
+            updateCount(doc.folder);
+            if (current === docKeyOf(doc)) renderFields();
+          });
+          entry.appendChild(undo);
+          var list = document.getElementById("up-list-" + doc.folder);
+          if (list) list.insertBefore(entry, list.firstChild);
+          filed[current] = entry;
+          updateCount(doc.folder);
+          approveBtn.disabled = true;
+          approveBtn.textContent = "Filed in " + doc.folderName;
+          statusEl.textContent = "Filed in the " + doc.folderName + " folder below. Nothing else on this page changed.";
+        });
+        function docKeyOf(doc) {
+          for (var k in DOCS) if (DOCS[k] === doc) return k;
+          return current;
+        }
+        var fileInput = document.getElementById("up-file-input");
+        var fileNote = document.getElementById("up-file-note");
+        if (fileInput && fileNote) {
+          fileInput.addEventListener("change", function () {
+            if (fileInput.files && fileInput.files.length) {
+              fileNote.textContent = "You picked \u201C" + fileInput.files[0].name + "\u201D. In this preview the bot does not read your file — only its name shows. Reading real files arrives with the backend phase; the three sample documents above walk the full flow.";
+            }
+          });
+        }
+        renderFields();
+      })();
     </script>
   </body>
 </html>
