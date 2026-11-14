@@ -254,7 +254,9 @@
         --pr-ffffff: #ffffff;
       }
       * { box-sizing: border-box; }
-      html { scroll-behavior: smooth; }
+      /* No smooth scrolling anywhere: navigation is an instant page
+         switch, never a slide through the sections in between. */
+      html { scroll-behavior: auto; }
       body {
         margin: 0;
         background: var(--bg, var(--pr-f6e3d1));
@@ -1936,6 +1938,48 @@
         .kpis .small-box.tilt::after, .card.tilt::after, .hero-card.tilt::after { display: none; }
       }
     </style>
+    <style>
+      /* ============================================================
+         MULTI-PAGE SPLIT (Nov 2026): the one long page becomes
+         Home + one page per sidebar zone + Document Upload.
+         Page switching only toggles visibility (.pg-hidden) and the
+         dash-grid template for the visible subset — no section,
+         figure, chart or wording is moved, duplicated or changed.
+         Desktop-first: subset grids are 2-column at desktop widths
+         and collapse to one column under the existing 900px rule.
+         ============================================================ */
+      .pg-hidden { display: none !important; }
+      .page-head {
+        margin-top: 24px;
+        background: var(--panel, var(--pr-fff8f1));
+        border: 1px solid var(--line, rgba(58,35,24,0.12));
+        border-radius: var(--v2-radius, 20px);
+        padding: 18px 20px;
+        box-shadow: 0 0 1px rgba(0,0,0,0.10), 0 1px 3px rgba(0,0,0,0.14);
+      }
+      .page-head h2 { margin: 10px 0 4px; font-size: 20px; font-weight: 600; letter-spacing: -0.01em; line-height: 1.3; }
+      .page-head h2:focus { outline: none; }
+      .page-head h2:focus-visible { outline: 2px solid var(--accent, var(--pr-c93f28)); outline-offset: 3px; border-radius: 4px; }
+      .page-head .page-desc { margin: 0; color: var(--muted, var(--pr-6b4a3a)); font-size: 13px; line-height: 1.55; max-width: 78ch; }
+      header.top h1:focus { outline: none; }
+      header.top h1:focus-visible { outline: 2px solid var(--accent, var(--pr-c93f28)); outline-offset: 3px; border-radius: 4px; }
+      /* Subset grids: only the cards on the current page lay out. */
+      .dash-grid.pg-insights { grid-template-columns: 1fr; grid-template-areas: "insights"; }
+      .dash-grid.pg-money { grid-template-areas: "labor materials" "time cost"; }
+      .dash-grid.pg-estimates { grid-template-areas: "fromto fromtohours" "accuracy accuracy"; }
+      .dash-grid.pg-next { grid-template-areas: "jobs jobs" "pipeline pipeline"; }
+      @media (max-width: 900px) {
+        .dash-grid.pg-insights { grid-template-columns: 1fr; grid-template-areas: "insights"; }
+        .dash-grid.pg-money { grid-template-columns: 1fr; grid-template-areas: "labor" "materials" "time" "cost"; }
+        .dash-grid.pg-estimates { grid-template-columns: 1fr; grid-template-areas: "fromto" "fromtohours" "accuracy"; }
+        .dash-grid.pg-next { grid-template-columns: 1fr; grid-template-areas: "jobs" "pipeline"; }
+      }
+      /* Page nav: zone labels are longer than section names, so the
+         number chip sizes to its content and labels may wrap. */
+      .sidebar .side-link { line-height: 1.35; }
+      .sidebar .side-link .side-num { width: auto; min-width: 20px; }
+      .sidebar .side-link[aria-current="page"] { background: var(--accent, var(--pr-c93f28)); color: var(--white, var(--pr-ffffff)); }
+    </style>
   </head>
   <body class="theme-v24">
     <canvas id="ambient-canvas" aria-hidden="true"></canvas>
@@ -3582,7 +3626,7 @@
         var el = $(id);
         if (!el) return;
         if (el.classList.contains("card")) setCard(el, true);
-        if (scroll) setTimeout(function () { el.scrollIntoView({ behavior: "smooth", block: "start" }); }, 40);
+        if (scroll) setTimeout(function () { el.scrollIntoView({ behavior: "instant", block: "start" }); }, 40);
         el.classList.add("flash");
         setTimeout(function () { el.classList.remove("flash"); }, 1600);
       }
@@ -3955,7 +3999,7 @@
       /* Top-bar phone actions: search jumps to the filters; menu expands/collapses every card */
       $("btn-search").addEventListener("click", function () {
         var controls = document.querySelector(".controls");
-        if (controls) controls.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (controls) controls.scrollIntoView({ behavior: "instant", block: "start" });
         setTimeout(function () { $("period").focus({ preventScroll: true }); }, 350);
       });
       /* Subtitle pass (Lama Dev): persist the sidebar's collapsed state
@@ -3987,7 +4031,7 @@
           link.classList.add("active");
           document.body.classList.remove("sidebar-open");
           var target = link.getAttribute("data-target");
-          if (target === "overview") { window.scrollTo({ top: 0, behavior: "smooth" }); return; }
+          if (target === "overview") { window.scrollTo({ top: 0, behavior: "instant" }); return; }
           flash(target, true);
         });
       });
@@ -4520,6 +4564,207 @@
           });
         }
         start();
+      })();
+    </script>
+    <script>
+      "use strict";
+      /* ================================================================
+         MULTI-PAGE SPLIT — Home + one page per sidebar zone + Upload.
+         The grouping is read from the sidebar itself (zone heads and
+         their section links), so the pages use exactly the mapping
+         the page already had:
+           How are we doing?        -> 08 Insights
+           Where the money goes     -> 01 Field Labor, 02 Materials,
+                                       03 Time Value, 04 Dollar Cost
+           How good are our estimates? -> 05 Estimate vs. Actual $,
+                                       06 Estimate vs. Actual Time,
+                                       07 Accuracy
+           What's next?             -> 09 Sample Jobs, 10 Pipeline
+           Document Upload          -> 11 Document Upload (own page)
+         Home keeps the greeting header (shared chrome: SIMULATED
+         badge, data-as-of stamp, decision summary, Needs attention),
+         the shared filters, key takeaways, the overview charts, the
+         KPI tiles, and the collapsed How to Read This. Switching a
+         page only toggles visibility — the single-source renderers
+         above keep computing every figure from JOBS/MONTHS/LABOR,
+         filters keep working on every page, and each section keeps
+         its click-to-expand card behaviour inside its page.
+         ================================================================ */
+      (function () {
+        function $(id) { return document.getElementById(id); }
+        var nav = document.querySelector(".side-nav");
+        var sidebar = $("sidebar");
+        if (!nav) return;
+
+        /* --- read the existing zone grouping from the sidebar --- */
+        var zoneHeads = Array.prototype.map.call(nav.querySelectorAll(".side-head"), function (h) { return h.textContent.replace(/\s+/g, " ").trim(); });
+        var svgByTarget = {};
+        Array.prototype.forEach.call(nav.querySelectorAll(".side-link"), function (l) {
+          var svg = l.querySelector("svg");
+          if (svg) svgByTarget[l.getAttribute("data-target")] = svg;
+        });
+        function zone(i, fallback) { return zoneHeads[i] || fallback; }
+
+        var PAGES = [
+          { id: "home",      hash: "home",      label: "Home",                              num: "",      icon: "overview",    sections: [] },
+          { id: "insights",  hash: "insights",  label: zone(0, "How are we doing?"),        num: "08",    icon: "sec-insights", sections: ["sec-insights"] },
+          { id: "money",     hash: "money",     label: zone(1, "Where the money goes"),     num: "01–04", icon: "sec-labor",    sections: ["sec-labor", "sec-materials", "sec-time", "sec-cost"] },
+          { id: "estimates", hash: "estimates", label: zone(2, "How good are our estimates?"), num: "05–07", icon: "sec-accuracy", sections: ["sec-fromto", "sec-fromto-hours", "sec-accuracy"] },
+          { id: "next",      hash: "next",      label: zone(3, "What's next?"),             num: "09–10", icon: "sec-jobs",     sections: ["sec-jobs", "sec-pipeline"] },
+          { id: "upload",    hash: "upload",    label: "Document Upload",                   num: "11",    icon: "sec-upload",   sections: ["sec-upload"] }
+        ];
+        var PAGE_BY_ID = {}, PAGE_BY_HASH = {}, SECTION_PAGE = {};
+        PAGES.forEach(function (p) {
+          PAGE_BY_ID[p.id] = p; PAGE_BY_HASH[p.hash] = p;
+          p.sections.forEach(function (sid) { SECTION_PAGE[sid] = p; });
+        });
+
+        /* --- shared vs. per-page elements --- */
+        var grid = document.querySelector(".dash-grid");
+        var uploadEl = $("sec-upload");
+        var homeEls = [$("takeaways"), $("hero-analytics"), $("kpis"), document.querySelector(".kpi-footnote"), $("sample-note"), $("how-to-read")].filter(function (e) { return !!e; });
+        var gridCards = grid ? Array.prototype.slice.call(grid.children) : [];
+        var h1 = document.querySelector("header.top h1");
+        if (h1) h1.setAttribute("tabindex", "-1");
+        var baseTitle = document.title;
+        var crumbB = document.querySelector(".crumbs b");
+        var statusEl = $("filter-status");
+
+        /* --- page heading block (group pages only) --- */
+        var pageHead = document.createElement("div");
+        pageHead.className = "page-head pg-hidden";
+        pageHead.id = "page-head";
+        pageHead.innerHTML = '<span class="sim-badge">Simulated data — for presentation only</span><h2 id="page-title" tabindex="-1"></h2><p class="page-desc" id="page-desc"></p>';
+        if (grid && grid.parentNode) grid.parentNode.insertBefore(pageHead, grid);
+        var pageTitle = $("page-title"), pageDesc = $("page-desc");
+
+        function sectionListText(p) {
+          return p.sections.map(function (sid) {
+            var el = $(sid);
+            if (!el) return sid;
+            var num = el.querySelector(".block-head .num");
+            var h = el.querySelector(".block-head h2");
+            return (num ? num.textContent.trim() + " " : "") + (h ? h.textContent.replace(/\s+/g, " ").trim() : sid);
+          }).join(" · ");
+        }
+
+        /* --- rebuild the sidebar as the page nav --- */
+        if (sidebar) sidebar.setAttribute("aria-label", "Dashboard pages");
+        nav.innerHTML = "";
+        var navHead = document.createElement("div");
+        navHead.className = "side-head";
+        navHead.textContent = "Pages";
+        nav.appendChild(navHead);
+        var navBtns = {};
+        PAGES.forEach(function (p) {
+          var b = document.createElement("button");
+          b.type = "button";
+          b.className = "side-link";
+          b.setAttribute("data-page", p.id);
+          b.setAttribute("title", p.id === "home" ? "Go to the Home page — overview, key figures and takeaways" : "Go to the " + p.label + " page");
+          var svg = svgByTarget[p.icon];
+          if (svg) b.appendChild(svg.cloneNode(true));
+          var num = document.createElement("span");
+          num.className = "side-num";
+          num.setAttribute("aria-hidden", "true");
+          num.textContent = p.num;
+          b.appendChild(num);
+          b.appendChild(document.createTextNode(p.label));
+          b.addEventListener("click", function () {
+            document.body.classList.remove("sidebar-open");
+            showPage(p, { focus: true, push: true });
+          });
+          nav.appendChild(b);
+          navBtns[p.id] = b;
+        });
+
+        var current = null;
+        function showPage(p, opts) {
+          opts = opts || {};
+          current = p;
+          var isHome = p.id === "home";
+          homeEls.forEach(function (e) { e.classList.toggle("pg-hidden", !isHome); });
+          if (grid) {
+            grid.classList.toggle("pg-hidden", isHome || p.id === "upload");
+            ["pg-insights", "pg-money", "pg-estimates", "pg-next"].forEach(function (c) { grid.classList.remove(c); });
+            if (!isHome && p.id !== "upload") grid.classList.add("pg-" + p.id);
+            gridCards.forEach(function (card) {
+              card.classList.toggle("pg-hidden", p.sections.indexOf(card.id) === -1);
+            });
+          }
+          if (uploadEl) uploadEl.classList.toggle("pg-hidden", p.id !== "upload");
+          pageHead.classList.toggle("pg-hidden", isHome);
+          if (!isHome) {
+            pageTitle.textContent = p.label;
+            pageDesc.textContent = "Sections on this page: " + sectionListText(p) + ". Select a section heading to expand its charts and tables.";
+          }
+          PAGES.forEach(function (q) {
+            var b = navBtns[q.id];
+            if (!b) return;
+            var on = q === p;
+            b.classList.toggle("active", on);
+            if (on) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+          });
+          if (crumbB) crumbB.textContent = isHome ? "Home" : p.label;
+          document.title = isHome ? baseTitle : p.label + " — Osborne Electric Dashboard (Simulated)";
+          if (opts.push && window.history && history.pushState && location.hash !== "#" + p.hash) {
+            try { history.pushState(null, "", "#" + p.hash); } catch (e) { location.hash = p.hash; }
+          }
+          if (statusEl) statusEl.textContent = isHome ? "Home page — overview, key figures and takeaways." : p.label + " page — " + sectionListText(p) + ".";
+          if (opts.focus) {
+            var target = isHome ? h1 : pageTitle;
+            if (target) target.focus({ preventScroll: true });
+          }
+          /* Instant, never animated: "auto" would defer to the CSS
+             scroll-behavior and slide through the old page. */
+          if (opts.scroll !== false) window.scrollTo({ top: 0, behavior: "instant" });
+        }
+
+        function expandLocal(id) {
+          var el = $(id);
+          if (!el || !el.classList.contains("card")) return;
+          el.classList.add("expanded");
+          var head = el.querySelector(".card-toggle");
+          var detail = el.querySelector(".card-detail");
+          var lab = el.querySelector(".expand-label");
+          if (head) head.setAttribute("aria-expanded", "true");
+          if (lab) lab.textContent = "Collapse";
+          if (detail) detail.hidden = false;
+        }
+
+        /* In-content jumps (takeaways, insights, KPI footers, alerts,
+           hero button) still call the original flash(); switch to the
+           target section's page first, in the capture phase, so the
+           jump lands on a visible, expanded section. */
+        document.addEventListener("click", function (e) {
+          if (!e.target || !e.target.closest) return;
+          var targetId = null;
+          var dt = e.target.closest("[data-target]");
+          if (dt) targetId = dt.getAttribute("data-target");
+          else if (e.target.closest("#hero-action")) targetId = "sec-jobs";
+          if (!targetId) return;
+          var p = SECTION_PAGE[targetId];
+          if (p && (!current || p.id !== current.id)) showPage(p, { focus: false, scroll: false, push: true });
+        }, true);
+
+        function pageFromHash(focus) {
+          var h = (location.hash || "").replace(/^#/, "");
+          if (!h) { showPage(PAGE_BY_ID.home, { focus: focus }); return; }
+          var p = PAGE_BY_HASH[h];
+          if (p) { showPage(p, { focus: focus }); return; }
+          var sp = SECTION_PAGE[h];
+          if (sp) {
+            showPage(sp, { focus: false, scroll: false });
+            expandLocal(h);
+            var el = $(h);
+            if (el) setTimeout(function () { el.scrollIntoView({ behavior: "instant", block: "start" }); }, 40);
+            return;
+          }
+          showPage(PAGE_BY_ID.home, { focus: focus });
+        }
+        window.addEventListener("hashchange", function () { pageFromHash(true); });
+
+        pageFromHash(false);
       })();
     </script>
   </body>
